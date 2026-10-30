@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nifty Paper Trader</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --text:#1c2230; --muted:#6b7280; --line:#e3e6eb;
+  --accent:#2457d6; --accent-text:#ffffff; --green:#127a3e; --green-bg:#e5f5ea;
+  --red:#b42318; --red-bg:#fdecea; --amber:#8a5a00; --amber-bg:#fff4dc; --blue-bg:#e8eefc;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#11141a; --card:#1a1f28; --text:#e7eaf0; --muted:#9aa3b2; --line:#2c3340;
+    --accent:#5b8cff; --accent-text:#0b1020; --green:#4cc97f; --green-bg:#16301f;
+    --red:#ff7b6e; --red-bg:#3a1a17; --amber:#f2b84b; --amber-bg:#352a12; --blue-bg:#1c2a4a;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:18px 16px 6px;max-width:1050px;margin:0 auto}
+h1{font-size:22px;margin:0}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+main{max-width:1050px;margin:0 auto;padding:8px 16px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
+.card h2{font-size:16px;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-size:17px;font-weight:600;margin-top:2px;word-break:break-word}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:8px;padding:8px 14px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+input{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);margin:4px 0 10px}
+label{font-size:13px;color:var(--muted)}
+.msg{margin-top:10px;font-size:14px;color:var(--muted)}
+.banner{border-radius:10px;padding:10px 12px;font-weight:500}
+.banner.amber{background:var(--amber-bg);color:var(--amber)}
+.banner.red{background:var(--red-bg);color:var(--red)}
+.banner.green{background:var(--green-bg);color:var(--green)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.wrap{white-space:normal;min-width:220px}
+th{font-size:12px;color:var(--muted);font-weight:600}
+tr.f td{background:var(--blue-bg)}
+.pos{color:var(--green);font-weight:600}
+.neg{color:var(--red);font-weight:600}
+.muted{color:var(--muted)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:20px;background:var(--amber-bg);color:var(--amber);font-weight:600}
+.ok{color:var(--green)} .no{color:var(--red)}
+.log{font-size:13px;color:var(--muted);max-height:200px;overflow:auto}
+.log div{padding:2px 0;border-bottom:1px dashed var(--line)}
+.hidden{display:none}
+.small{font-size:13px;color:var(--muted)}
+.small li{margin:3px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Nifty Paper Trader</h1>
+  <div class="sub">Paper trading only: pretend money, real Nifty prices. This app cannot place real orders.</div>
+</header>
+<main>
+
+  <section id="setupCard" class="card hidden">
+    <h2>One-time setup</h2>
+    <label>Supabase function URL</label>
+    <input id="fnUrl" placeholder="https://xxxx.supabase.co/functions/v1/nifty-paper">
+    <label>App PIN (same as the APP_PIN secret)</label>
+    <input id="pinIn" type="password" placeholder="Your PIN">
+    <button class="primary" id="saveCfg">Save</button>
+  </section>
+
+  <section class="card">
+    <div class="grid">
+      <div class="stat"><div class="k">Zerodha</div><div class="v" id="stZ">Not logged in</div></div>
+      <div class="stat"><div class="k">Live feed</div><div class="v" id="stF">Off</div></div>
+      <div class="stat"><div class="k">Nifty 50</div><div class="v" id="stN">—</div></div>
+      <div class="stat"><div class="k">India VIX</div><div class="v" id="stV">—</div></div>
+      <div class="stat"><div class="k">Time (IST)</div><div class="v" id="stT">—</div></div>
+    </div>
+    <div class="btns">
+      <button class="primary" id="loginBtn">Login with Zerodha</button>
+      <button class="primary" id="startBtn">Start</button>
+      <button id="testBtn">Test alert</button>
+      <button id="cfgBtn">Settings</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <section class="card">
+    <h2>Today's pick</h2>
+    <div id="pickBox" class="muted">Press Start to choose today's strategy.</div>
+  </section>
+
+  <section class="card">
+    <h2>Today's strategies</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Strategy</th><th>Reading now</th><th>Position / last check</th><th>Entry</th><th>Now</th><th>P&amp;L (before charges)</th></tr></thead>
+      <tbody id="todayBody"></tbody>
+    </table></div>
+    <div class="small" style="margin-top:8px">Each strategy runs twice: plain (signal only) and with filters (shaded rows). All six trade on paper; only the pick sends Telegram alerts.</div>
+  </section>
+
+  <section class="card">
+    <h2>Scorecard</h2>
+    <div id="verdict" class="banner amber">No paper trades yet.</div>
+    <div class="tablewrap" style="margin-top:10px"><table>
+      <thead><tr><th>Strategy</th><th>Paper trades</th><th>Wins</th><th>Net P&amp;L after charges</th><th>Worst losing streak</th><th>Biggest fall</th><th>Backtest (Nifty points)</th></tr></thead>
+      <tbody id="scoreBody"></tbody>
+    </table></div>
+    <div class="small" style="margin-top:8px">Backtest = the plain rules run on the last ~60 days of Nifty, in index points. Filters can't be backtested because Zerodha doesn't keep old option data, so filtered versions are judged only by live paper trades.</div>
+  </section>
+
+  <section class="card">
+    <h2>What the filters blocked</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Filter</th><th>Signals it blocked</th></tr></thead>
+      <tbody id="blockBody"></tbody>
+    </table></div>
+    <div class="small" style="margin-top:8px">One signal can be blocked by several filters at once. Recent blocked signals:</div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Date</th><th>Time</th><th>Strategy</th><th>Side</th><th>Blocked by</th></tr></thead>
+      <tbody id="skipBody"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <h2>Paper trade log</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Date</th><th>Strategy</th><th>Option</th><th>Entry</th><th>Exit</th><th>Why exited</th><th>Charges</th><th>Net P&amp;L</th></tr></thead>
+      <tbody id="logBody"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <h2>Activity</h2>
+    <div class="log" id="activity"></div>
+  </section>
+
+  <section class="card small">
+    <h2 style="color:var(--text)">The rules</h2>
+    <ul>
+      <li><b>EMA crossover:</b> on 5-minute Nifty candles, buy a call (CE) when the 9-candle average crosses above the 21-candle average, a put (PE) when it crosses below. Exit when they cross back.</li>
+      <li><b>Opening range breakout:</b> take Nifty's high and low from 9:15 to 9:30. Buy CE when a candle closes above the high, PE when one closes below the low. Exit if Nifty falls back past the middle of that range.</li>
+      <li><b>RSI reversal:</b> buy CE when RSI(14) climbs back above 30 (oversold), PE when it drops back below 70 (overbought). Exit when RSI reaches 50.</li>
+    </ul>
+    <b style="color:var(--text)">Filters (the "+ filters" versions enter only if all six pass)</b>
+    <ul>
+      <li><b>Expiry:</b> uses the nearest weekly option with at least 2 days left, so fast time decay doesn't eat it.</li>
+      <li><b>Bigger trend:</b> CE only if Nifty is above its 50-candle average (about 4 hours); PE only if below.</li>
+      <li><b>Open interest:</b> looks at the 7 strikes around the current price over the last 15 minutes. CE only if put open interest grew more than call open interest (option sellers betting Nifty won't fall); PE the opposite.</li>
+      <li><b>India VIX:</b> skip if VIX is below 11. Nifty barely moves then, and option buyers usually lose to time decay.</li>
+      <li><b>Not too expensive:</b> the app works out the option's implied volatility (how much "fear" is priced in). Skip if it is more than 1.3 times India VIX.</li>
+      <li><b>Liquidity:</b> skip if the gap between the best buy and sell price is more than ₹0.50 or 1% of the price.</li>
+    </ul>
+    <b style="color:var(--text)">For every trade</b>
+    <ul>
+      <li>1 lot of the at-the-money option. Plain versions use the nearest weekly expiry (next one on expiry day). New entries only 9:30 am–2:30 pm. Stop-loss −25% of premium, target +40%, everything closed by 3:15 pm. At most one trade per strategy per day. Skipped if 1 lot costs more than ₹20,000.</li>
+      <li><b>Daily pick:</b> once any version has 10+ paper trades, the pick is the version with the best paper profit after charges (among those with 10+). Before that, the filtered version of the strategy with the best recent backtest. If nothing is in profit, the day is skipped.</li>
+      <li><b>Charges</b> are estimated: ₹20 brokerage per order, 0.15% STT on the sell side, exchange fees, SEBI fee, stamp duty and 18% GST.</li>
+      <li>Keep this page open on one device from before 9:15 am to 3:30 pm. Zerodha requires a fresh login every morning.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+"use strict";
+// ---------- Settings ----------
+const CAPITAL = 20000;          // your planned capital
+const SL_PCT = 0.25;            // stop-loss: premium falls 25%
+const TGT_PCT = 0.40;           // target: premium rises 40%
+const NIFTY_TOKEN = 256265;     // Zerodha's id for the Nifty 50 index
+const VIX_SYMBOL = "NSE:INDIA VIX";
+const MIN_DAYS = 2;             // filter: at least 2 days to expiry
+const VIX_MIN = 11;             // filter: skip when India VIX is below this
+const IV_MAX_RATIO = 1.3;       // filter: skip when option IV > 1.3 × VIX
+const OI_LOOKBACK = 15 * 60000; // filter: open interest change over 15 minutes
+const RISK_FREE = 0.065;        // for the implied volatility calculation
+
+const BASES = { ema: "EMA crossover (9/21)", orb: "Opening range breakout", rsi: "RSI reversal (14)" };
+const BASE_KEYS = Object.keys(BASES);
+const KEYS = ["ema", "ema_f", "orb", "orb_f", "rsi", "rsi_f"];
+const isF = (k) => k.endsWith("_f");
+const baseOf = (k) => k.replace("_f", "");
+const nameOf = (k) => (BASES[baseOf(k)] || k) + (isF(k) ? " + filters" : "");
+const FILTERS = {
+  expiry: "Expiry ≥ 2 days",
+  trend: "Bigger trend",
+  oi: "Open interest",
+  vix: "India VIX",
+  iv: "Not too expensive",
+  liq: "Liquidity"
+};
+
+// ---------- Helpers ----------
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const IST = 19800000;
+function istParts(ms) {
+  const d = new Date((ms == null ? Date.now() : ms) + IST);
+  return { date: d.toISOString().slice(0, 10), mins: d.getUTCHours() * 60 + d.getUTCMinutes(), hms: d.toISOString().slice(11, 19) };
+}
+const today = () => istParts().date;
+const hhmm = (ms) => istParts(ms).hms.slice(0, 5);
+const marketOpen = () => { const m = istParts().mins; return m >= 555 && m < 930; };
+function kiteTime(ms) { return new Date(ms + IST).toISOString().slice(0, 19).replace("T", " "); }
+function rs(n) {
+  if (n == null || isNaN(n)) return "—";
+  const v = Number(n);
+  return (v < 0 ? "−₹" : "₹") + Math.abs(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+}
+const r2 = (n) => Math.round(n * 100) / 100;
+const cls = (n) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function fixTs(s) { return s.replace(/([+-]\d{2})(\d{2})$/, "$1:$2"); }
+function fmtExpiry(x) {
+  const d = new Date(x + "T00:00:00Z");
+  return d.getUTCDate() + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()];
+}
+const daysLeft = (exp) => Math.round((Date.parse(exp + "T00:00:00Z") - Date.parse(today() + "T00:00:00Z")) / 86400000);
+
+// ---------- State ----------
+let cfg = store.get("np_cfg", null);
+const S = {
+  token: null, user: null, sessionDate: null, apiKey: null, options: null,
+  candles: [], lastNifty: null, vix: null, ws: null, wsRetry: 0, running: false,
+  positions: {}, optLtp: {}, trades: [], skips: [], backtest: {}, pick: null,
+  processedBucket: 0, pending: {}, skippedCost: {}, oiSnaps: [], wakeLock: null, log: []
+};
+
+function msg(t) { $("msg").textContent = t || ""; }
+function log(t) {
+  S.log.unshift(hhmm(Date.now()) + "  " + t);
+  S.log = S.log.slice(0, 80);
+  $("activity").innerHTML = S.log.map((l) => "<div>" + esc(l) + "</div>").join("");
+}
+
+async function api(action, data) {
+  if (!cfg) throw new Error("Open Settings and fill in the function URL and PIN first.");
+  const r = await fetch(cfg.fnUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-app-pin": cfg.pin },
+    body: JSON.stringify(Object.assign({ action }, data || {}))
+  });
+  let j = {};
+  try { j = await r.json(); } catch (e) {}
+  if (!r.ok || j.error) throw new Error(j.error || ("Server error " + r.status));
+  return j;
+}
+
+// ---------- Indicators ----------
+function ema(vals, p) {
+  const k = 2 / (p + 1), out = new Array(vals.length).fill(null);
+  let e = null;
+  for (let i = 0; i < vals.length; i++) {
+    e = e == null ? vals[i] : vals[i] * k + e * (1 - k);
+    if (i >= p - 1) out[i] = e;
+  }
+  return out;
+}
+function rsi(vals, p) {
+  const out = new Array(vals.length).fill(null);
+  let ag = 0, al = 0;
+  for (let i = 1; i < vals.length; i++) {
+    const ch = vals[i] - vals[i - 1], g = Math.max(ch, 0), l = Math.max(-ch, 0);
+    if (i <= p) { ag += g / p; al += l / p; if (i === p) out[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al); }
+    else { ag = (ag * (p - 1) + g) / p; al = (al * (p - 1) + l) / p; out[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al); }
+  }
+  return out;
+}
+function prep(cs) {
+  const c = cs.map((x) => x.c);
+  return { e9: ema(c, 9), e21: ema(c, 21), e50: ema(c, 50), r: rsi(c, 14) };
+}
+function dayStart(cs, i) {
+  const d = istParts(cs[i].t).date;
+  let j = i;
+  while (j > 0 && istParts(cs[j - 1].t).date === d) j--;
+  return j;
+}
+function orbRange(cs, d0, i) {
+  if (istParts(cs[d0].t).mins !== 555 || i - d0 < 3) return null; // needs 9:15, 9:20, 9:25 candles
+  const r = cs.slice(d0, d0 + 3);
+  const hi = Math.max.apply(null, r.map((x) => x.h)), lo = Math.min.apply(null, r.map((x) => x.l));
+  return { hi, lo, mid: (hi + lo) / 2 };
+}
+
+// Signals at candle index i (a closed candle). d0 = first candle of that day.
+function evalAt(st, cs, ind, i, d0) {
+  const res = { entry: null, exitCE: false, exitPE: false };
+  if (i < 1) return res;
+  if (st === "ema") {
+    const a = ind.e9, b = ind.e21;
+    if (a[i] == null || b[i] == null || a[i - 1] == null || b[i - 1] == null) return res;
+    if (a[i - 1] <= b[i - 1] && a[i] > b[i]) res.entry = "CE";
+    else if (a[i - 1] >= b[i - 1] && a[i] < b[i]) res.entry = "PE";
+    res.exitCE = a[i] < b[i];
+    res.exitPE = a[i] > b[i];
+  } else if (st === "orb") {
+    const R = orbRange(cs, d0, i);
+    if (!R) return res;
+    const p = cs[i - 1].c, c = cs[i].c;
+    if (p <= R.hi && c > R.hi) res.entry = "CE";
+    else if (p >= R.lo && c < R.lo) res.entry = "PE";
+    res.exitCE = c < R.mid;
+    res.exitPE = c > R.mid;
+  } else if (st === "rsi") {
+    const r = ind.r;
+    if (r[i] == null || r[i - 1] == null) return res;
+    if (r[i - 1] < 30 && r[i] >= 30) res.entry = "CE";
+    else if (r[i - 1] > 70 && r[i] <= 70) res.entry = "PE";
+    res.exitCE = r[i] >= 50;
+    res.exitPE = r[i] <= 50;
+  }
+  return res;
+}
+const inEntryWindow = (closeMins) => closeMins >= 570 && closeMins <= 870; // 9:30 to 2:30
+const TIME_EXIT = 915; // 3:15 pm
+
+// ---------- Option maths (Black-Scholes, for implied volatility) ----------
+function ncdf(x) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989422804 * Math.exp(-x * x / 2);
+  const p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return x > 0 ? 1 - p : p;
+}
+function bsPrice(type, spot, K, T, r, v) {
+  const sq = v * Math.sqrt(T);
+  const d1 = (Math.log(spot / K) + (r + v * v / 2) * T) / sq, d2 = d1 - sq;
+  return type === "CE" ? spot * ncdf(d1) - K * Math.exp(-r * T) * ncdf(d2)
+                       : K * Math.exp(-r * T) * ncdf(-d2) - spot * ncdf(-d1);
+}
+function impliedVol(type, price, spot, K, T) {
+  if (!(price > 0) || !(T > 0) || !(spot > 0)) return NaN;
+  let lo = 0.01, hi = 3;
+  if (bsPrice(type, spot, K, T, RISK_FREE, lo) > price || bsPrice(type, spot, K, T, RISK_FREE, hi) < price) return NaN;
+  for (let i = 0; i < 60; i++) {
+    const m = (lo + hi) / 2;
+    if (bsPrice(type, spot, K, T, RISK_FREE, m) > price) hi = m; else lo = m;
+  }
+  return (lo + hi) / 2;
+}
+function yearsToExpiry(exp) { return (Date.parse(exp + "T15:30:00+05:30") - Date.now()) / (365 * 86400000); }
+
+// ---------- Backtest (plain rules, Nifty index points, past days only) ----------
+function runBacktest(cs) {
+  const ind = prep(cs), out = {}, td = today();
+  for (const st of BASE_KEYS) {
+    const pts = [];
+    let pos = null, d0 = 0, cur = null, traded = false;
+    for (let i = 0; i < cs.length; i++) {
+      const p = istParts(cs[i].t);
+      if (p.date !== cur) {
+        if (pos) { pts.push(pnlPts(pos, cs[i - 1].c)); pos = null; }
+        cur = p.date; d0 = i; traded = false;
+      }
+      if (p.date === td) break;
+      const closeMins = p.mins + 5;
+      const ev = evalAt(st, cs, ind, i, d0);
+      if (pos) {
+        if ((pos.side === "CE" && ev.exitCE) || (pos.side === "PE" && ev.exitPE) || closeMins >= TIME_EXIT) {
+          pts.push(pnlPts(pos, cs[i].c)); pos = null;
+        }
+      } else if (!traded && ev.entry && inEntryWindow(closeMins)) {
+        pos = { side: ev.entry, entry: cs[i].c }; traded = true;
+      }
+    }
+    if (pos && cs.length) pts.push(pnlPts(pos, cs[cs.length - 1].c));
+    let streak = 0, worst = 0;
+    for (const x of pts) { if (x <= 0) { streak++; worst = Math.max(worst, streak); } else streak = 0; }
+    out[st] = { n: pts.length, wins: pts.filter((x) => x > 0).length, pts: pts.reduce((a, b) => a + b, 0), worst };
+  }
+  return out;
+}
+function pnlPts(pos, px) { return pos.side === "CE" ? px - pos.entry : pos.entry - px; }
+
+// ---------- Charges (estimate, Zerodha options buy + sell) ----------
+function charges(entry, exit, qty) {
+  const buy = entry * qty, sell = exit * qty, turnover = buy + sell;
+  const brokerage = 40;                    // ₹20 per order × 2
+  const stt = sell * 0.0015;               // 0.15% on sell premium (from 1 Apr 2026)
+  const exch = turnover * 0.0003503;       // NSE transaction charge
+  const sebi = turnover * 0.000001;        // ₹10 per crore
+  const stamp = buy * 0.00003;             // 0.003% on buy
+  const gst = 0.18 * (brokerage + exch + sebi);
+  return r2(brokerage + stt + exch + sebi + stamp + gst);
+}
+
+// ---------- Stats ----------
+function statsFor(list) {
+  const t = list.slice().sort((a, b) => String(a.entry_time).localeCompare(String(b.entry_time)));
+  let net = 0, peak = 0, maxDD = 0, streak = 0, worst = 0, wins = 0;
+  const days = new Set();
+  for (const x of t) {
+    const v = Number(x.net_pnl) || 0;
+    net += v; peak = Math.max(peak, net); maxDD = Math.max(maxDD, peak - net);
+    if (v > 0) { wins++; streak = 0; } else { streak++; worst = Math.max(worst, streak); }
+    days.add(x.trade_date);
+  }
+  return { n: t.length, wins, net: r2(net), maxDD: r2(maxDD), worst, days: days.size };
+}
+const closedTrades = () => S.trades.filter((t) => t.status === "closed");
+
+function computePick() {
+  const closed = closedTrades();
+  const live = {};
+  for (const k of KEYS) live[k] = statsFor(closed.filter((t) => t.strategy === k));
+  const proven = KEYS.filter((k) => live[k].n >= 10);
+  if (proven.length) {
+    let best = null;
+    for (const k of proven) if (!best || live[k].net > best.score) best = { k, score: live[k].net };
+    if (best.score <= 0) return { k: null, why: "None of the versions with 10+ paper trades is in profit after charges, so today is skipped." };
+    return { k: best.k, why: "Best paper result among versions with 10+ trades: " + rs(best.score) + " net after charges over " + live[best.k].n + " trades." };
+  }
+  let best = null;
+  for (const b of BASE_KEYS) {
+    const bt = S.backtest[b];
+    if (bt && bt.n >= 10 && (!best || bt.pts > best.score)) best = { b, score: bt.pts };
+  }
+  if (!best || best.score <= 0) return { k: null, why: "No strategy was in profit in the recent backtest, so today is skipped." };
+  return { k: best.b + "_f", why: "Best recent backtest: " + best.score.toFixed(0) + " Nifty points over " + S.backtest[best.b].n + " trades. Using its filtered version. Not enough paper trades yet to judge live." };
+}
+
+// ---------- Notifications ----------
+async function notify(text) {
+  try { await api("notify", { text }); }
+  catch (e) { log("Telegram alert failed: " + e.message); }
+  try { if ("Notification" in window && Notification.permission === "granted") new Notification("Nifty Paper Trader", { body: text }); } catch (e) {}
+}
+
+// ---------- Expiry choice ----------
+function plainExpiry() {
+  const e = S.options.expiries;
+  return (e[0] === today() && e[1]) ? e[1] : e[0];
+}
+function filterExpiry() {
+  const e = S.options.expiries;
+  return e.find((x) => daysLeft(x) >= MIN_DAYS) || e[e.length - 1];
+}
+function strikesAround(spot, exp, width) {
+  const atm = Math.round(spot / 50) * 50, ks = [];
+  for (let d = -width; d <= width; d++) ks.push(atm + d * 50);
+  return S.options.items.filter((x) => x.x === exp && ks.indexOf(x.k) >= 0);
+}
+
+// ---------- Open interest snapshots (every 5 minutes) ----------
+async function takeOISnapshot() {
+  if (!S.running || !marketOpen() || S.lastNifty == null || !S.options) return;
+  try {
+    const insts = strikesAround(S.lastNifty, filterExpiry(), 3);
+    const q = (await api("quote", { access_token: S.token, symbols: insts.map((x) => "NFO:" + x.s).concat([VIX_SYMBOL]) })).data;
+    const oi = {};
+    for (const x of insts) { const d = q["NFO:" + x.s]; if (d && d.oi != null) oi[x.t] = { oi: d.oi, y: x.y }; }
+    if (q[VIX_SYMBOL]) S.vix = q[VIX_SYMBOL].ltp;
+    S.oiSnaps.push({ t: Date.now(), oi });
+    S.oiSnaps = S.oiSnaps.filter((s) => Date.now() - s.t < 3600000);
+  } catch (e) { log("Open interest snapshot failed: " + e.message); }
+}
+
+// ---------- The six filters ----------
+async function checkFilters(base, side, spot) {
+  const cs = S.candles, i = cs.length - 1, ind = prep(cs);
+  const res = {};
+  const exp = filterExpiry();
+  const dl = daysLeft(exp);
+  res.expiry = { pass: dl >= MIN_DAYS, detail: dl + " days left (" + fmtExpiry(exp) + ")" };
+
+  const e50 = ind.e50[i], c = cs[i].c;
+  if (e50 == null) res.trend = { pass: false, detail: "Not enough candles yet" };
+  else res.trend = { pass: side === "CE" ? c > e50 : c < e50, detail: "Nifty " + c.toFixed(0) + " vs 50-avg " + e50.toFixed(0) };
+
+  const insts = strikesAround(spot, exp, 3);
+  const atm = Math.round(spot / 50) * 50;
+  const target = insts.find((x) => x.k === atm && x.y === side);
+  if (!target) throw new Error("option " + atm + " " + side + " not found");
+  const q = (await api("quote", { access_token: S.token, symbols: insts.map((x) => "NFO:" + x.s).concat([VIX_SYMBOL]) })).data;
+
+  // India VIX
+  const vix = q[VIX_SYMBOL] ? q[VIX_SYMBOL].ltp : null;
+  if (vix != null) S.vix = vix;
+  res.vix = vix == null ? { pass: false, detail: "VIX not available" } : { pass: vix >= VIX_MIN, detail: "VIX " + vix.toFixed(2) + " (need ≥ " + VIX_MIN + ")" };
+
+  // Implied volatility vs VIX
+  const T = yearsToExpiry(exp);
+  const ce = insts.find((x) => x.k === atm && x.y === "CE"), pe = insts.find((x) => x.k === atm && x.y === "PE");
+  const ivs = [];
+  if (ce && q["NFO:" + ce.s]) ivs.push(impliedVol("CE", q["NFO:" + ce.s].ltp, spot, atm, T));
+  if (pe && q["NFO:" + pe.s]) ivs.push(impliedVol("PE", q["NFO:" + pe.s].ltp, spot, atm, T));
+  const good = ivs.filter((v) => isFinite(v));
+  if (!good.length || vix == null) res.iv = { pass: false, detail: "Couldn't work out implied volatility" };
+  else {
+    const iv = good.reduce((a, b) => a + b, 0) / good.length * 100;
+    res.iv = { pass: iv <= vix * IV_MAX_RATIO, detail: "Option IV " + iv.toFixed(1) + "% vs limit " + (vix * IV_MAX_RATIO).toFixed(1) + "%" };
+  }
+
+  // Open interest change over 15 minutes
+  const old = S.oiSnaps.filter((s) => Date.now() - s.t >= OI_LOOKBACK).pop();
+  if (!old) res.oi = { pass: false, detail: "Needs 15 minutes of running to compare" };
+  else {
+    let dCE = 0, dPE = 0, n = 0;
+    for (const x of insts) {
+      const now = q["NFO:" + x.s], then = old.oi[x.t];
+      if (!now || now.oi == null || !then) continue;
+      n++;
+      if (x.y === "CE") dCE += now.oi - then.oi; else dPE += now.oi - then.oi;
+    }
+    if (!n) res.oi = { pass: false, detail: "No matching strikes to compare" };
+    else {
+      const mins = Math.round((Date.now() - old.t) / 60000);
+      res.oi = { pass: side === "CE" ? dPE > dCE : dCE > dPE,
+                 detail: "In " + mins + " min: call OI " + (dCE >= 0 ? "+" : "") + dCE.toLocaleString("en-IN") + ", put OI " + (dPE >= 0 ? "+" : "") + dPE.toLocaleString("en-IN") };
+    }
+  }
+
+  // Liquidity
+  const tq = q["NFO:" + target.s];
+  if (!tq) res.liq = { pass: false, detail: "No quote for " + target.s };
+  else {
+    const spread = tq.ask - tq.bid;
+    const ok = tq.bid > 0 && tq.ask > 0 && spread <= Math.max(0.5, tq.ltp * 0.01);
+    res.liq = { pass: ok, detail: "Buy " + rs(tq.bid) + " / sell " + rs(tq.ask) };
+  }
+
+  const failed = Object.keys(FILTERS).filter((f) => !res[f] || !res[f].pass);
+  return { res, failed, target, exp, price: tq ? tq.ltp : null };
+}
+
+// ---------- Live candles ----------
+function updateCandle(ms, px) {
+  const b = Math.floor(ms / 300000) * 300000;
+  const m = istParts(b).mins;
+  if (m < 555 || m >= 930) return; // only 9:15 to 3:30
+  const last = S.candles[S.candles.length - 1];
+  if (last && last.t === b) { last.h = Math.max(last.h, px); last.l = Math.min(last.l, px); last.c = px; }
+  else if (!last || b > last.t) S.candles.push({ t: b, o: px, h: px, l: px, c: px });
+}
+
+function onTick(tok, ltp) {
+  if (tok === NIFTY_TOKEN) { S.lastNifty = ltp; updateCandle(Date.now(), ltp); }
+  else { S.optLtp[tok] = ltp; checkRisk(tok, ltp); }
+}
+
+function checkRisk(tok, ltp) {
+  for (const k of KEYS) {
+    const p = S.positions[k];
+    if (!p || Number(p.token) !== tok) continue;
+    if (ltp <= Number(p.stop_price)) exitPos(k, "Stop-loss (−25%)", ltp);
+    else if (ltp >= Number(p.target_price)) exitPos(k, "Target (+40%)", ltp);
+  }
+}
+
+function onCandleClose(i) {
+  const cs = S.candles;
+  if (istParts(cs[i].t).date !== today()) return;
+  takeOISnapshot();
+  const ind = prep(cs), d0 = dayStart(cs, i), closeMins = istParts(cs[i].t).mins + 5;
+  for (const b of BASE_KEYS) {
+    const ev = evalAt(b, cs, ind, i, d0);
+    for (const k of [b, b + "_f"]) {
+      const pos = S.positions[k];
+      if (pos) {
+        if ((pos.side === "CE" && ev.exitCE) || (pos.side === "PE" && ev.exitPE)) exitPos(k, "Strategy exit signal");
+      } else if (ev.entry && inEntryWindow(closeMins) && !tradedToday(k)) {
+        enterPos(k, ev.entry);
+      }
+    }
+  }
+}
+function tradedToday(k) {
+  return !!S.pending[k] || S.trades.some((t) => t.trade_date === today() && t.strategy === k);
+}
+
+// ---------- Paper entries and exits ----------
+async function enterPos(k, side) {
+  S.pending[k] = true;
+  try {
+    const spot = S.lastNifty != null ? S.lastNifty : S.candles[S.candles.length - 1].c;
+    const strike = Math.round(spot / 50) * 50;
+    let inst, exp, price, filterNote = null;
+
+    if (isF(k)) {
+      const chk = await checkFilters(baseOf(k), side, spot);
+      if (chk.failed.length) {
+        const skip = { trade_date: today(), strategy: k, side, nifty: spot, failed: chk.failed.join(","), details: chk.res };
+        try { const r = await api("skip_log", { skip }); S.skips.unshift(r.skip || Object.assign({ at: new Date().toISOString() }, skip)); }
+        catch (e) { S.skips.unshift(Object.assign({ at: new Date().toISOString() }, skip)); }
+        log(nameOf(k) + ": " + side + " signal blocked by " + chk.failed.map((f) => FILTERS[f]).join(", "));
+        return;
+      }
+      inst = chk.target; exp = chk.exp; price = chk.price;
+      filterNote = Object.keys(FILTERS).map((f) => FILTERS[f] + ": " + chk.res[f].detail).join(" | ");
+    } else {
+      exp = plainExpiry();
+      inst = S.options.items.find((x) => x.x === exp && x.k === strike && x.y === side);
+      if (!inst) throw new Error("option " + strike + " " + side + " not found");
+      const q = await api("ltp", { access_token: S.token, symbols: ["NFO:" + inst.s] });
+      price = q.data && q.data["NFO:" + inst.s] ? q.data["NFO:" + inst.s].last_price : null;
+    }
+    if (!price) throw new Error("no price for " + inst.s);
+
+    const cost = price * inst.l;
+    if (cost > CAPITAL) {
+      if (S.skippedCost[k] !== today()) log(nameOf(k) + ": signal skipped, 1 lot costs " + rs(cost) + ", more than " + rs(CAPITAL));
+      S.skippedCost[k] = today();
+      return;
+    }
+    const isPick = !!(S.pick && S.pick.k === k);
+    const label = "NIFTY " + inst.k + " " + side + " (" + fmtExpiry(exp) + ")";
+    const trade = {
+      trade_date: today(), strategy: k, is_pick: isPick, side, symbol: inst.s, label, token: inst.t, qty: inst.l,
+      entry_time: new Date().toISOString(), entry_price: price, nifty_entry: spot,
+      stop_price: r2(price * (1 - SL_PCT)), target_price: r2(price * (1 + TGT_PCT)), filter_note: filterNote
+    };
+    const r = await api("trade_open", { trade });
+    if (r.duplicate) { await reloadTrades(); return; }
+    S.trades.push(r.trade);
+    S.positions[k] = r.trade;
+    S.optLtp[inst.t] = price;
+    subscribe([inst.t]);
+    log(nameOf(k) + ": paper BUY " + label + " at " + rs(price) + (isPick ? " (today's pick)" : ""));
+    if (isPick) {
+      notify("📈 PAPER ENTRY (pretend money, not a real trade)\n" +
+        "Strategy: " + nameOf(k) + "\n" +
+        "BUY " + label + "\n" +
+        "Price " + rs(price) + " × " + inst.l + " = " + rs(cost) + "\n" +
+        "Nifty: " + spot.toFixed(2) + (S.vix != null ? " · VIX " + S.vix.toFixed(2) : "") + "\n" +
+        (isF(k) ? "All 6 filters passed\n" : "") +
+        "Stop-loss " + rs(trade.stop_price) + " · Target " + rs(trade.target_price) + " · Closes by 3:15 pm");
+    }
+  } catch (e) {
+    log(nameOf(k) + ": entry failed: " + e.message);
+  } finally {
+    S.pending[k] = false;
+    render();
+  }
+}
+
+async function exitPos(k, reason, tickPrice) {
+  const pos = S.positions[k];
+  if (!pos || pos.closing) return;
+  pos.closing = true;
+  try {
+    let px = tickPrice;
+    if (px == null) {
+      try {
+        const q = await api("ltp", { access_token: S.token, symbols: ["NFO:" + pos.symbol] });
+        px = q.data["NFO:" + pos.symbol].last_price;
+      } catch (e) { px = S.optLtp[pos.token]; }
+    }
+    if (px == null) throw new Error("no exit price yet");
+    const entry = Number(pos.entry_price), qty = Number(pos.qty);
+    const gross = r2((px - entry) * qty), ch = charges(entry, px, qty), net = r2(gross - ch);
+    const fields = {
+      exit_time: new Date().toISOString(), exit_price: px, nifty_exit: S.lastNifty, exit_reason: reason,
+      gross_pnl: gross, charges: ch, net_pnl: net, status: "closed"
+    };
+    await api("trade_close", { id: pos.id, fields });
+    const t = S.trades.find((x) => x.id === pos.id);
+    if (t) Object.assign(t, fields);
+    delete S.positions[k];
+    log(nameOf(k) + ": paper EXIT " + (pos.label || pos.symbol) + " at " + rs(px) + ", " + reason + ", net " + rs(net));
+    if (pos.is_pick) {
+      notify((net >= 0 ? "✅" : "🔻") + " PAPER EXIT (pretend money, not a real trade)\n" +
+        "Strategy: " + nameOf(k) + "\n" +
+        "SELL " + (pos.label || pos.symbol) + " at " + rs(px) + "\n" +
+        "Reason: " + reason + "\n" +
+        "Bought at " + rs(entry) + " · Profit/loss " + rs(gross) + " − charges " + rs(ch) + " = " + rs(net));
+    }
+  } catch (e) {
+    pos.closing = false;
+    log(nameOf(k) + ": exit failed, will retry: " + e.message);
+  }
+  render();
+}
+
+// ---------- Zerodha live feed ----------
+function setFeed(t) { $("stF").textContent = t; }
+function connectWS() {
+  if (S.ws) { try { S.ws.onclose = null; S.ws.close(); } catch (e) {} }
+  const ws = new WebSocket("wss://ws.kite.trade?api_key=" + encodeURIComponent(S.apiKey) + "&access_token=" + encodeURIComponent(S.token));
+  ws.binaryType = "arraybuffer";
+  S.ws = ws;
+  setFeed("Connecting…");
+  ws.onopen = () => {
+    S.wsRetry = 0; setFeed("Connected");
+    subscribe([NIFTY_TOKEN].concat(Object.values(S.positions).map((p) => Number(p.token))));
+  };
+  ws.onmessage = (ev) => {
+    if (typeof ev.data === "string") {
+      try { const j = JSON.parse(ev.data); if (j.type === "error") log("Feed: " + j.data); } catch (e) {}
+      return;
+    }
+    parseTicks(ev.data);
+  };
+  ws.onclose = () => {
+    setFeed("Disconnected");
+    if (!S.running || S.ws !== ws) return;
+    if (S.wsRetry >= 8) { log("Live feed keeps dropping. Log in with Zerodha again, then press Start."); return; }
+    const wait = Math.min(30, Math.pow(2, S.wsRetry++)) * 1000;
+    setTimeout(() => { if (S.running && S.ws === ws) connectWS(); }, wait);
+  };
+}
+function subscribe(tokens) {
+  const ws = S.ws;
+  if (!ws || ws.readyState !== 1 || !tokens.length) return;
+  ws.send(JSON.stringify({ a: "subscribe", v: tokens }));
+  ws.send(JSON.stringify({ a: "mode", v: ["ltp", tokens] }));
+}
+function parseTicks(buf) {
+  if (buf.byteLength < 4) return; // heartbeat
+  const dv = new DataView(buf);
+  const n = dv.getInt16(0);
+  let off = 2;
+  for (let i = 0; i < n && off + 2 <= buf.byteLength; i++) {
+    const len = dv.getInt16(off); off += 2;
+    if (len >= 8 && off + 8 <= buf.byteLength) onTick(dv.getInt32(off), dv.getInt32(off + 4) / 100);
+    off += len;
+  }
+}
+
+// ---------- Every second ----------
+function everySecond() {
+  const now = Date.now(), p = istParts(now);
+  $("stT").textContent = p.hms;
+  if (S.running) {
+    if (S.sessionDate !== today()) {
+      S.running = false; S.oiSnaps = [];
+      if (S.ws) { S.ws.onclose = null; S.ws.close(); }
+      setFeed("Off");
+      msg("New day: log in with Zerodha again, then press Start.");
+    } else {
+      const curB = Math.floor(now / 300000) * 300000;
+      let lastClosed = -1;
+      for (let i = S.candles.length - 1; i >= 0; i--) { if (S.candles[i].t < curB) { lastClosed = i; break; } }
+      if (lastClosed >= 0 && S.candles[lastClosed].t > S.processedBucket) {
+        S.processedBucket = S.candles[lastClosed].t;
+        onCandleClose(lastClosed);
+      }
+      if (p.mins >= TIME_EXIT) for (const k of KEYS) if (S.positions[k]) exitPos(k, "Time exit 3:15 pm");
+    }
+  }
+  render();
+}
+
+// ---------- Rendering ----------
+function render() {
+  $("stZ").textContent = S.token ? (S.user ? "Logged in: " + S.user : "Logged in") : "Not logged in";
+  $("stN").textContent = S.lastNifty != null ? S.lastNifty.toFixed(2) : "—";
+  $("stV").textContent = S.vix != null ? S.vix.toFixed(2) : "—";
+  $("loginBtn").disabled = !cfg;
+  $("startBtn").disabled = !cfg || !S.token || S.running;
+  $("startBtn").textContent = S.running ? "Running" : "Start";
+
+  // Pick
+  if (S.pick) {
+    $("pickBox").innerHTML = S.pick.k
+      ? "<b>" + esc(nameOf(S.pick.k)) + "</b><div class='small'>" + esc(S.pick.why) + "</div>"
+      : "<b>No trade today</b><div class='small'>" + esc(S.pick.why) + "</div>";
+  }
+
+  // Today's table
+  const cs = S.candles;
+  const read = { ema: "—", orb: "—", rsi: "—" };
+  if (cs.length > 25) {
+    const ind = prep(cs), i = cs.length - 1, d0 = dayStart(cs, i);
+    const a = ind.e9[i], b = ind.e21[i];
+    if (a != null && b != null) read.ema = "9-avg " + (a > b ? "above" : "below") + " 21-avg";
+    if (istParts(cs[i].t).date === today()) {
+      const R = orbRange(cs, d0, i);
+      read.orb = R ? "Range " + R.lo.toFixed(0) + "–" + R.hi.toFixed(0) : "Range forms 9:15–9:30";
+    }
+    if (ind.r[i] != null) read.rsi = "RSI " + ind.r[i].toFixed(1);
+  }
+  $("todayBody").innerHTML = KEYS.map((k) => {
+    const p = S.positions[k];
+    const done = S.trades.find((t) => t.trade_date === today() && t.strategy === k && t.status !== "open");
+    const pickTag = S.pick && S.pick.k === k ? " <span class='tag'>PICK</span>" : "";
+    let posTxt = "Waiting for signal", en = "", nw = "", pl = "";
+    if (p) {
+      const now = S.optLtp[p.token];
+      posTxt = esc(p.label || p.symbol);
+      en = rs(p.entry_price);
+      nw = now != null ? rs(now) : "…";
+      if (now != null) { const g = r2((now - p.entry_price) * p.qty); pl = "<span class='" + cls(g) + "'>" + rs(g) + "</span>"; }
+    } else if (done) {
+      posTxt = "Done for today";
+      pl = "<span class='" + cls(done.net_pnl) + "'>" + rs(done.net_pnl) + " net</span>";
+    } else {
+      const sk = isF(k) ? S.skips.find((s) => s.strategy === k && s.trade_date === today()) : null;
+      if (sk) posTxt = "Last " + esc(sk.side) + " signal (" + hhmm(Date.parse(sk.at)) + ") blocked: " + esc(String(sk.failed).split(",").map((f) => FILTERS[f] || f).join(", "));
+      else if (!S.running) posTxt = "Not running";
+    }
+    return "<tr" + (isF(k) ? " class='f'" : "") + "><td>" + esc(nameOf(k)) + pickTag + "</td><td>" + esc(read[baseOf(k)]) +
+      "</td><td class='wrap'>" + posTxt + "</td><td>" + en + "</td><td>" + nw + "</td><td>" + pl + "</td></tr>";
+  }).join("");
+
+  // Scorecard
+  const closed = closedTrades();
+  $("scoreBody").innerHTML = KEYS.map((k) => {
+    const s = statsFor(closed.filter((t) => t.strategy === k)), bt = isF(k) ? null : S.backtest[k];
+    const btTxt = bt ? (bt.pts >= 0 ? "+" : "") + bt.pts.toFixed(0) + " pts, " + bt.wins + "/" + bt.n + " wins" : (isF(k) ? "Live only" : "—");
+    return "<tr" + (isF(k) ? " class='f'" : "") + "><td>" + esc(nameOf(k)) + "</td><td>" + s.n + "</td><td>" + s.wins + "</td><td class='" + cls(s.net) + "'>" + rs(s.net) +
+      "</td><td>" + s.worst + "</td><td>" + (s.maxDD ? "−" + rs(s.maxDD) : "—") + "</td><td>" + btTxt + "</td></tr>";
+  }).join("");
+
+  const ps = statsFor(closed.filter((t) => t.is_pick));
+  const v = $("verdict");
+  if (ps.n < 50 || ps.days < 40) {
+    v.className = "banner amber";
+    v.textContent = "Not enough evidence yet: " + ps.n + " of 50 picked paper trades, over " + ps.days + " of 40 trading days. Net so far " + rs(ps.net) + ". Don't copy these trades with real money yet.";
+  } else if (ps.net <= 0) {
+    v.className = "banner red";
+    v.textContent = "Losing on paper after charges (" + rs(ps.net) + " over " + ps.n + " trades). Don't use this with real money.";
+  } else if (ps.maxDD > CAPITAL * 0.5) {
+    v.className = "banner red";
+    v.textContent = "In profit on paper (" + rs(ps.net) + "), but at its worst it fell " + rs(ps.maxDD) + ", more than half of " + rs(CAPITAL) + ". Too risky for this capital.";
+  } else {
+    v.className = "banner green";
+    v.textContent = "In profit on paper: " + rs(ps.net) + " after charges over " + ps.n + " trades, biggest fall " + rs(ps.maxDD) + ". That's evidence, not a guarantee. Markets change.";
+  }
+
+  // Filter blocks
+  const counts = {};
+  for (const f of Object.keys(FILTERS)) counts[f] = 0;
+  for (const s of S.skips) for (const f of String(s.failed || "").split(",")) if (f in counts) counts[f]++;
+  $("blockBody").innerHTML = Object.keys(FILTERS).map((f) => "<tr><td>" + esc(FILTERS[f]) + "</td><td>" + counts[f] + "</td></tr>").join("");
+  $("skipBody").innerHTML = S.skips.slice(0, 15).map((s) =>
+    "<tr><td>" + esc(s.trade_date) + "</td><td>" + hhmm(Date.parse(s.at)) + "</td><td>" + esc(nameOf(s.strategy)) + "</td><td>" + esc(s.side) +
+    "</td><td class='wrap'>" + esc(String(s.failed || "").split(",").map((f) => FILTERS[f] || f).join(", ")) + "</td></tr>"
+  ).join("") || "<tr><td colspan='5' class='muted'>Nothing blocked yet.</td></tr>";
+
+  // Log
+  $("logBody").innerHTML = S.trades.slice().reverse().slice(0, 150).map((t) => {
+    return "<tr><td>" + esc(t.trade_date) + "</td><td>" + esc(nameOf(t.strategy)) + (t.is_pick ? " <span class='tag'>PICK</span>" : "") +
+      "</td><td>" + esc(t.label || t.symbol) + "</td><td>" + rs(t.entry_price) + " <span class='muted'>" + hhmm(Date.parse(t.entry_time)) + "</span></td><td>" +
+      (t.exit_price != null ? rs(t.exit_price) + " <span class='muted'>" + hhmm(Date.parse(t.exit_time)) + "</span>" : (t.status === "open" ? "Open" : "—")) +
+      "</td><td>" + esc(t.exit_reason || "") + "</td><td>" + (t.charges != null ? rs(t.charges) : "") +
+      "</td><td class='" + cls(Number(t.net_pnl)) + "'>" + (t.net_pnl != null ? rs(t.net_pnl) : "") + "</td></tr>";
+  }).join("") || "<tr><td colspan='8' class='muted'>No paper trades yet.</td></tr>";
+}
+
+// ---------- Start ----------
+async function reloadTrades() {
+  const r = await api("trades");
+  S.trades = r.trades || [];
+}
+async function reloadSkips() {
+  try { const r = await api("skips"); S.skips = r.skips || []; } catch (e) { log("Couldn't load filter history: " + e.message); }
+}
+
+async function start() {
+  if (!S.token) { msg("Log in with Zerodha first."); return; }
+  $("startBtn").disabled = true;
+  try {
+    if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch (e) {} }
+    msg("Loading Zerodha settings…");
+    S.apiKey = (await api("config")).api_key;
+    msg("Loading the Nifty option list…");
+    S.options = await api("options", { access_token: S.token });
+    if (!S.options.items || !S.options.items.length) throw new Error("No Nifty options found in Zerodha's list.");
+    msg("Loading 60 days of Nifty prices and testing the strategies…");
+    const now = Date.now();
+    const h = await api("history", { access_token: S.token, from: kiteTime(now - 60 * 86400000).slice(0, 10) + " 09:00:00", to: kiteTime(now) });
+    const curB = Math.floor(now / 300000) * 300000;
+    S.candles = (h.candles || []).map((r) => ({ t: Date.parse(fixTs(r[0])), o: r[1], h: r[2], l: r[3], c: r[4] })).filter((c) => c.t < curB);
+    S.processedBucket = S.candles.length ? S.candles[S.candles.length - 1].t : 0;
+    if (S.candles.length) S.lastNifty = S.candles[S.candles.length - 1].c;
+    S.backtest = runBacktest(S.candles);
+
+    msg("Loading your paper trades…");
+    await reloadTrades();
+    await reloadSkips();
+    // Trades left open on an earlier day (app was closed) are not counted.
+    for (const t of S.trades) {
+      if (t.status === "open" && t.trade_date !== today()) {
+        const fields = { status: "void", exit_reason: "App was closed before exit, not counted" };
+        try { await api("trade_close", { id: t.id, fields }); Object.assign(t, fields); } catch (e) {}
+      }
+    }
+    S.positions = {};
+    for (const t of S.trades) if (t.status === "open" && t.trade_date === today()) S.positions[t.strategy] = t;
+
+    const saved = store.get("np_pick2", null);
+    if (saved && saved.date === today()) S.pick = saved;
+    else { S.pick = Object.assign({ date: today() }, computePick()); store.set("np_pick2", S.pick); }
+    log("Today's pick: " + (S.pick.k ? nameOf(S.pick.k) : "none, skipping"));
+
+    S.running = true;
+    S.wsRetry = 0;
+    S.oiSnaps = [];
+    connectWS();
+    await takeOISnapshot();
+    try { if ("wakeLock" in navigator) S.wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+    msg(istParts().mins < 930
+      ? "Running. Keep this page open until 3:30 pm. The open-interest filter needs 15 minutes of running before it can pass."
+      : "Market is closed for today. Backtest and scorecard are loaded; live trading resumes next market day.");
+  } catch (e) {
+    msg("Couldn't start: " + e.message + (/token|session|api_key|access/i.test(e.message) ? ". Try logging in with Zerodha again." : ""));
+  }
+  render();
+}
+
+// ---------- Login ----------
+async function login() {
+  try {
+    msg("Opening Zerodha login…");
+    const c = await api("config");
+    if (!c.api_key) throw new Error("KITE_API_KEY secret is not set in Supabase.");
+    location.href = "https://kite.zerodha.com/connect/login?v=3&api_key=" + encodeURIComponent(c.api_key);
+  } catch (e) { msg("Login failed: " + e.message); }
+}
+
+async function handleRedirect() {
+  const qp = new URLSearchParams(location.search);
+  const rt = qp.get("request_token");
+  if (!rt) return;
+  history.replaceState(null, "", location.pathname);
+  if (qp.get("status") !== "success") { msg("Zerodha login was cancelled."); return; }
+  try {
+    msg("Finishing Zerodha login…");
+    const r = await api("session", { request_token: rt });
+    store.set("np_session", { token: r.access_token, user: r.user_name, date: today() });
+    msg("Logged in. Press Start.");
+  } catch (e) { msg("Zerodha login failed: " + e.message); }
+}
+
+function loadSession() {
+  const s = store.get("np_session", null);
+  if (s && s.date === today()) { S.token = s.token; S.user = s.user; S.sessionDate = s.date; }
+  else { S.token = null; S.user = null; S.sessionDate = null; }
+}
+
+// ---------- Wire up ----------
+function showSetup(show) {
+  $("setupCard").classList.toggle("hidden", !show);
+  if (show && cfg) { $("fnUrl").value = cfg.fnUrl; $("pinIn").value = cfg.pin; }
+}
+$("saveCfg").onclick = () => {
+  const fnUrl = $("fnUrl").value.trim(), pin = $("pinIn").value.trim();
+  if (!/^https:\/\//.test(fnUrl) || !pin) { alert("Fill in both the function URL and the PIN."); return; }
+  cfg = { fnUrl, pin }; store.set("np_cfg", cfg); showSetup(false); msg("Saved. Now log in with Zerodha."); render();
+};
+$("cfgBtn").onclick = () => showSetup($("setupCard").classList.contains("hidden"));
+$("loginBtn").onclick = login;
+$("startBtn").onclick = start;
+$("testBtn").onclick = async () => {
+  if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch (e) {} }
+  msg("Sending test alert…");
+  try { await api("notify", { text: "✅ Test from Nifty Paper Trader. Alerts are working." }); msg("Test alert sent. Check Telegram."); }
+  catch (e) { msg("Test alert failed: " + e.message); }
+};
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "visible" && S.running && "wakeLock" in navigator) {
+    try { S.wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+  }
+});
+window.addEventListener("beforeunload", (e) => {
+  if (S.running && Object.keys(S.positions).length) { e.preventDefault(); e.returnValue = ""; }
+});
+
+(async function init() {
+  if (!cfg) showSetup(true);
+  await handleRedirect();
+  loadSession();
+  render();
+  if (cfg && S.token) {
+    try { await reloadTrades(); await reloadSkips(); } catch (e) { msg("Couldn't load trades: " + e.message); }
+    render();
+  }
+  setInterval(everySecond, 1000);
+})();
+</script>
+</body>
+</html>
