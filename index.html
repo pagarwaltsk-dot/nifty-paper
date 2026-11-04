@@ -4,196 +4,333 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nifty Paper Trader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f5f6f8; --card:#ffffff; --text:#1c2230; --muted:#6b7280; --line:#e3e6eb;
-  --accent:#2457d6; --accent-text:#ffffff; --green:#127a3e; --green-bg:#e5f5ea;
-  --red:#b42318; --red-bg:#fdecea; --amber:#8a5a00; --amber-bg:#fff4dc; --blue-bg:#e8eefc;
+  --bg:#f3f5f9; --card:#ffffff; --text:#111827; --muted:#6b7280; --faint:#9ca3af; --line:#e6e9f0;
+  --brand:#3b5bdb; --brand-soft:#eef2ff; --brand-text:#ffffff;
+  --up:#0f9f5c; --up-soft:#e7f7ef; --down:#e03131; --down-soft:#fdecec; --warn:#b26b00; --warn-soft:#fff5e0;
+  --top:#0f172a; --top-text:#e5e7eb; --shadow:0 1px 2px rgba(16,24,40,.05),0 4px 16px rgba(16,24,40,.06);
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#11141a; --card:#1a1f28; --text:#e7eaf0; --muted:#9aa3b2; --line:#2c3340;
-    --accent:#5b8cff; --accent-text:#0b1020; --green:#4cc97f; --green-bg:#16301f;
-    --red:#ff7b6e; --red-bg:#3a1a17; --amber:#f2b84b; --amber-bg:#352a12; --blue-bg:#1c2a4a;
+    --bg:#0b0f17; --card:#131a26; --text:#e6e9ef; --muted:#9aa4b5; --faint:#6b7486; --line:#232c3b;
+    --brand:#6d8cff; --brand-soft:#1b2440; --brand-text:#0b1020;
+    --up:#34d399; --up-soft:#10291f; --down:#f87171; --down-soft:#2f1717; --warn:#fbbf24; --warn-soft:#2c2412;
+    --top:#060a12; --top-text:#e5e7eb; --shadow:0 1px 2px rgba(0,0,0,.4);
   }
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{padding:18px 16px 6px;max-width:1050px;margin:0 auto}
-h1{font-size:22px;margin:0}
-.sub{color:var(--muted);font-size:13px;margin-top:2px}
-main{max-width:1050px;margin:0 auto;padding:8px 16px 40px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
-.card h2{font-size:16px;margin:0 0 10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.stat{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
-.stat .k{font-size:12px;color:var(--muted)}
-.stat .v{font-size:17px;font-weight:600;margin-top:2px;word-break:break-word}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:8px;padding:8px 14px;cursor:pointer}
-button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
-button:disabled{opacity:.5;cursor:default}
-input{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);margin:4px 0 10px}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-feature-settings:"tnum" 1}
+b{font-weight:600}
+.top{background:var(--top);color:var(--top-text);position:sticky;top:0;z-index:5}
+.top-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#4c6ef5,#15aabf);display:grid;place-items:center;font-weight:800;color:#fff}
+.name{font-weight:700;font-size:16px}
+.tagline{font-size:12px;color:#9aa4b5}
+.status{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08)}
+.pill i{width:8px;height:8px;border-radius:50%;background:#6b7280}
+.pill.on i{background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.2)}
+.pill.wait i{background:#fbbf24}
+.pill.off i{background:#6b7280}
+.clock{font-size:13px;color:#cbd5e1;padding-left:4px}
+main{max-width:1100px;margin:0 auto;padding:14px 16px 48px}
+.notice{background:var(--brand-soft);color:var(--brand);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:500}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:var(--shadow)}
+.card h2{font-size:15px;margin:0 0 12px;font-weight:700}
+.card h2 small{font-weight:400;color:var(--muted);font-size:13px}
+.hint{font-size:13px;color:var(--muted);margin:8px 0 0}
+.two{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
+.two .card{margin:0}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+/* market strip */
+.strip{display:grid;grid-template-columns:auto auto 1fr;gap:24px;align-items:center}
+@media (max-width:820px){.strip{grid-template-columns:1fr 1fr}.actions{grid-column:1/-1}}
+.lbl{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.big{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.mid{font-size:22px;font-weight:700;line-height:1.2}
+.chg{font-size:13px;font-weight:600}
+.chg.up{color:var(--up)} .chg.down{color:var(--down)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:820px){.actions{justify-content:flex-start}}
+button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 14px;cursor:pointer}
+button.primary{background:var(--brand);color:var(--brand-text);border-color:var(--brand)}
+button.go{background:var(--up);color:#fff;border-color:var(--up)}
+button:disabled{opacity:.55;cursor:default}
+.msg{font-size:14px;color:var(--muted);margin-top:10px}
+input{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);margin:4px 0 12px}
 label{font-size:13px;color:var(--muted)}
-.msg{margin-top:10px;font-size:14px;color:var(--muted)}
-.banner{border-radius:10px;padding:10px 12px;font-weight:500}
-.banner.amber{background:var(--amber-bg);color:var(--amber)}
-.banner.red{background:var(--red-bg);color:var(--red)}
-.banner.green{background:var(--green-bg);color:var(--green)}
+/* today's trade */
+.planline{font-size:13px;color:var(--muted);margin-bottom:10px}
+.planline b{color:var(--text)}
+.empty{text-align:center;padding:14px 6px}
+.empty .em,.result .em{font-size:28px}
+.empty b{display:block;font-size:17px;margin-top:4px}
+.empty p{margin:6px auto 0;color:var(--muted);max-width:440px;font-size:14px}
+.skipnote{background:var(--warn-soft);color:var(--warn)!important;border-radius:8px;padding:6px 10px;font-size:13px!important}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+.badge.up{background:var(--up-soft);color:var(--up)} .badge.down{background:var(--down-soft);color:var(--down)}
+.tname{font-size:18px;font-weight:700;margin-top:6px}
+.legs{font-size:13px;color:var(--muted);margin-top:4px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.nums div{background:var(--bg);border-radius:10px;padding:8px 10px}
+.nums span{display:block;font-size:12px;color:var(--muted)}
+.nums b{font-size:17px}
+.bignum{font-size:20px;font-weight:800}
+.pos{color:var(--up);font-weight:700} .neg{color:var(--down);font-weight:700}
+.range{margin-top:16px}
+.track{position:relative;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--down-soft),var(--bg),var(--up-soft));border:1px solid var(--line)}
+.dot{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--brand);border:3px solid var(--card);transform:translate(-50%,-50%);box-shadow:0 0 0 1px var(--brand)}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+.ends small{color:var(--faint)}
+.result{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--bg);border-radius:12px;padding:12px}
+.rt{text-align:right}
+/* market mood */
+.mood{display:inline-block;font-size:20px;font-weight:800;padding:4px 14px;border-radius:10px}
+.mood.up{background:var(--up-soft);color:var(--up)} .mood.down{background:var(--down-soft);color:var(--down)} .mood.flat{background:var(--bg);color:var(--muted)}
+.mrows{margin-top:12px}
+.mrows div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.mrows span{color:var(--muted)}
+.mrows b.up{color:var(--up)} .mrows b.down{color:var(--down)}
+.floorceil{margin-top:18px}
+.fc-track{position:relative;height:10px;border-radius:99px;background:linear-gradient(90deg,var(--up-soft),var(--bg) 50%,var(--down-soft));border:1px solid var(--line);margin-top:26px}
+.fc-dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--text);transform:translate(-50%,-50%)}
+.fc-dot span{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:600;white-space:nowrap}
+/* verdict + kpis */
+.verdict{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:12px 14px}
+.verdict .vi{font-size:26px;line-height:1}
+.verdict b{font-size:17px;display:block}
+.verdict p{margin:2px 0 0;font-size:14px}
+.verdict.amber{background:var(--warn-soft);color:var(--warn)}
+.verdict.red{background:var(--down-soft);color:var(--down)}
+.verdict.green{background:var(--up-soft);color:var(--up)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi span{display:block;font-size:12px;color:var(--muted)}
+.kpi b{font-size:20px;font-weight:800}
+.progress{height:6px;background:var(--bg);border-radius:99px;margin-top:10px;overflow:hidden}
+.progress div{height:100%;background:var(--warn);border-radius:99px}
+/* plans */
+.plans{display:grid;gap:8px}
+.plan{display:grid;grid-template-columns:minmax(200px,1.2fr) 2fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.plan.picked{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}
+@media (max-width:640px){.plan{grid-template-columns:1fr auto}.plan .ps{grid-column:1/-1;order:3}}
+.pn b{display:block}
+.chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin:3px 4px 0 0}
+.chip.pair{background:var(--brand-soft);color:var(--brand)} .chip.single{background:var(--bg);color:var(--muted)}
+.chip.pick{background:var(--brand);color:var(--brand-text)}
+.ps{font-size:13px;color:var(--muted)}
+.pp{text-align:right;font-size:15px}
+/* tables */
 .tablewrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-td.wrap{white-space:normal;min-width:220px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.wrap{white-space:normal;min-width:200px}
 th{font-size:12px;color:var(--muted);font-weight:600}
-tr.f td{background:var(--blue-bg)}
-.pos{color:var(--green);font-weight:600}
-.neg{color:var(--red);font-weight:600}
+tbody tr:hover td{background:var(--bg)}
 .muted{color:var(--muted)}
-.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:20px;background:var(--amber-bg);color:var(--amber);font-weight:600}
-.ok{color:var(--green)} .no{color:var(--red)}
-.log{font-size:13px;color:var(--muted);max-height:200px;overflow:auto}
-.log div{padding:2px 0;border-bottom:1px dashed var(--line)}
+/* skipped reasons */
+.bb{display:grid;grid-template-columns:200px 1fr 40px;gap:10px;align-items:center;font-size:14px;padding:4px 0}
+@media (max-width:640px){.bb{grid-template-columns:130px 1fr 32px}}
+.bbt{height:10px;background:var(--bg);border-radius:99px;overflow:hidden}
+.bbt div{height:100%;background:var(--warn);border-radius:99px}
+.bb b{text-align:right}
+.log{font-size:13px;color:var(--muted);max-height:240px;overflow:auto}
+.log div{padding:5px 0;border-bottom:1px dashed var(--line)}
+details.card summary{cursor:pointer;font-weight:700;font-size:15px}
+details.card ul{padding-left:20px} details.card li{margin:6px 0;font-size:14px}
+details.card h3{font-size:14px;margin:16px 0 4px}
 .hidden{display:none}
-.small{font-size:13px;color:var(--muted)}
-.small li{margin:3px 0}
 </style>
 </head>
 <body>
-<header>
-  <h1>Nifty Paper Trader</h1>
-  <div class="sub">Paper trading only: pretend money, real Nifty prices. This app cannot place real orders.</div>
-</header>
+<header class="top"><div class="top-in">
+  <div class="brand">
+    <div class="logo">N</div>
+    <div><div class="name">Nifty Paper Trader</div><div class="tagline">Practice trading · pretend money · real prices</div></div>
+  </div>
+  <div class="status">
+    <span class="pill off" id="pillZ"><i></i><span id="stZ">Zerodha: not logged in</span></span>
+    <span class="pill off" id="pillF"><i></i><span id="stF">Live prices: off</span></span>
+    <span class="clock" id="stT">—</span>
+  </div>
+</div></header>
+
 <main>
+  <div class="notice">🧪 Practice mode. No real money is used, and this app cannot place real orders.</div>
 
   <section id="setupCard" class="card hidden">
     <h2>One-time setup</h2>
-    <label>Supabase function URL</label>
+    <label>Supabase function web address</label>
     <input id="fnUrl" placeholder="https://xxxx.supabase.co/functions/v1/nifty-paper">
-    <label>App PIN (same as the APP_PIN secret)</label>
+    <label>Your app PIN (same as APP_PIN in Supabase)</label>
     <input id="pinIn" type="password" placeholder="Your PIN">
     <button class="primary" id="saveCfg">Save</button>
   </section>
 
   <section class="card">
-    <div class="grid">
-      <div class="stat"><div class="k">Zerodha</div><div class="v" id="stZ">Not logged in</div></div>
-      <div class="stat"><div class="k">Live feed</div><div class="v" id="stF">Off</div></div>
-      <div class="stat"><div class="k">Nifty 50</div><div class="v" id="stN">—</div></div>
-      <div class="stat"><div class="k">India VIX</div><div class="v" id="stV">—</div></div>
-      <div class="stat"><div class="k">Time (IST)</div><div class="v" id="stT">—</div></div>
-    </div>
-    <div class="btns">
-      <button class="primary" id="loginBtn">Login with Zerodha</button>
-      <button class="primary" id="startBtn">Start</button>
-      <button id="testBtn">Test alert</button>
-      <button id="cfgBtn">Settings</button>
+    <div class="strip">
+      <div>
+        <div class="lbl">Nifty 50</div>
+        <div class="big" id="stN">—</div>
+        <div class="chg" id="stChg"></div>
+      </div>
+      <div>
+        <div class="lbl">Fear index (India VIX)</div>
+        <div class="mid" id="stV">—</div>
+        <div class="hint" id="stVh" style="margin:0"></div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="loginBtn">1. Log in to Zerodha</button>
+        <button class="go" id="startBtn">2. Start</button>
+        <button id="testBtn">Test Telegram</button>
+        <button id="cfgBtn">Settings</button>
+      </div>
     </div>
     <div class="msg" id="msg"></div>
   </section>
 
+  <div class="two">
+    <section class="card"><h2>Today's trade</h2><div id="tradeBox"></div></section>
+    <section class="card"><h2>Market mood <small>· what big players did in the last 30 min</small></h2><div id="moodBox"></div></section>
+  </div>
+
   <section class="card">
-    <h2>Today's pick</h2>
-    <div id="pickBox" class="muted">Press Start to choose today's strategy.</div>
+    <h2>Is it working?</h2>
+    <div id="verdict"></div>
+    <div class="kpis" id="kpis"></div>
   </section>
 
   <section class="card">
-    <h2>Today's strategies</h2>
+    <h2>All 6 practice plans today</h2>
+    <div class="plans" id="plans"></div>
+    <p class="hint">The app tests 3 ideas, each in 2 ways. All 6 trade with pretend money. Only "Today's plan" sends you Telegram messages.</p>
+  </section>
+
+  <section class="card">
+    <h2>Scorecard for each plan</h2>
     <div class="tablewrap"><table>
-      <thead><tr><th>Strategy</th><th>Reading now</th><th>Position / last check</th><th>Entry</th><th>Now</th><th>P&amp;L (before charges)</th></tr></thead>
-      <tbody id="todayBody"></tbody>
-    </table></div>
-    <div class="small" style="margin-top:8px">Each strategy runs twice: plain (signal only) and with filters (shaded rows). All six trade on paper; only the pick sends Telegram alerts.</div>
-  </section>
-
-  <section class="card">
-    <h2>Scorecard</h2>
-    <div id="verdict" class="banner amber">No paper trades yet.</div>
-    <div class="tablewrap" style="margin-top:10px"><table>
-      <thead><tr><th>Strategy</th><th>Paper trades</th><th>Wins</th><th>Net P&amp;L after charges</th><th>Worst losing streak</th><th>Biggest fall</th><th>Backtest (Nifty points)</th></tr></thead>
+      <thead><tr><th>Plan</th><th>Trades</th><th>Won</th><th>Profit / loss after charges</th><th>Longest losing run</th><th>Biggest drop</th><th>Past 60 days check</th></tr></thead>
       <tbody id="scoreBody"></tbody>
     </table></div>
-    <div class="small" style="margin-top:8px">Backtest = the plain rules run on the last ~60 days of Nifty, in index points. Filters can't be backtested because Zerodha doesn't keep old option data, so filtered versions are judged only by live paper trades.</div>
+    <p class="hint">"Past 60 days check" replays the idea on old Nifty prices, in points. It's only a rough guide. "Big players" can't be checked this way because old OI data isn't available.</p>
   </section>
 
   <section class="card">
-    <h2>What the filters blocked</h2>
-    <div class="tablewrap"><table>
-      <thead><tr><th>Filter</th><th>Signals it blocked</th></tr></thead>
-      <tbody id="blockBody"></tbody>
-    </table></div>
-    <div class="small" style="margin-top:8px">One signal can be blocked by several filters at once. Recent blocked signals:</div>
-    <div class="tablewrap"><table>
-      <thead><tr><th>Date</th><th>Time</th><th>Strategy</th><th>Side</th><th>Blocked by</th></tr></thead>
+    <h2>Why trades were skipped</h2>
+    <div id="blockBars"></div>
+    <div class="tablewrap" style="margin-top:12px"><table>
+      <thead><tr><th>Date</th><th>Time</th><th>Plan</th><th>Wanted</th><th>Skipped because</th></tr></thead>
       <tbody id="skipBody"></tbody>
     </table></div>
   </section>
 
   <section class="card">
-    <h2>Paper trade log</h2>
+    <h2>Trade history</h2>
     <div class="tablewrap"><table>
-      <thead><tr><th>Date</th><th>Strategy</th><th>Option</th><th>Entry</th><th>Exit</th><th>Why exited</th><th>Charges</th><th>Net P&amp;L</th></tr></thead>
+      <thead><tr><th>Date</th><th>Plan</th><th>Trade</th><th>Bought</th><th>Sold</th><th>Why it closed</th><th>Charges</th><th>Final result</th></tr></thead>
       <tbody id="logBody"></tbody>
     </table></div>
   </section>
 
   <section class="card">
-    <h2>Activity</h2>
-    <div class="log" id="activity"></div>
+    <h2>What the app did today</h2>
+    <div class="log" id="activity"><div>Nothing yet.</div></div>
   </section>
 
-  <section class="card small">
-    <h2 style="color:var(--text)">The rules</h2>
+  <details class="card">
+    <summary>How it works, in simple words</summary>
+    <h3>Words you'll see</h3>
     <ul>
-      <li><b>EMA crossover:</b> on 5-minute Nifty candles, buy a call (CE) when the 9-candle average crosses above the 21-candle average, a put (PE) when it crosses below. Exit when they cross back.</li>
-      <li><b>Opening range breakout:</b> take Nifty's high and low from 9:15 to 9:30. Buy CE when a candle closes above the high, PE when one closes below the low. Exit if Nifty falls back past the middle of that range.</li>
-      <li><b>RSI reversal:</b> buy CE when RSI(14) climbs back above 30 (oversold), PE when it drops back below 70 (overbought). Exit when RSI reaches 50.</li>
+      <li><b>UP bet (Call):</b> makes money if Nifty goes up.</li>
+      <li><b>DOWN bet (Put):</b> makes money if Nifty goes down.</li>
+      <li><b>Single option:</b> buy one option. Bigger wins and bigger losses.</li>
+      <li><b>Safer pair:</b> buy one option and sell a cheaper one at the same time. Costs about a third, loses value more slowly, but the profit has a cap.</li>
+      <li><b>Loss limit:</b> if the trade falls to this price, the app gets out to stop the loss growing.</li>
+      <li><b>Target:</b> if the trade rises to this price, the app takes the profit.</li>
+      <li><b>Big players (OI):</b> open interest shows how many option contracts are open. Big players usually sell options. When they sell lots of puts, they're betting Nifty won't fall; lots of calls, that it won't rise.</li>
+      <li><b>Floor and ceiling:</b> the price levels where big players sold the most puts (floor) and calls (ceiling). Nifty often stops near them.</li>
+      <li><b>Fear index (VIX):</b> how much traders expect Nifty to move. Very low means prices barely move, which is bad for option buyers.</li>
     </ul>
-    <b style="color:var(--text)">Filters (the "+ filters" versions enter only if all six pass)</b>
+    <h3>The 3 ideas</h3>
     <ul>
-      <li><b>Expiry:</b> uses the nearest weekly option with at least 2 days left, so fast time decay doesn't eat it.</li>
-      <li><b>Bigger trend:</b> CE only if Nifty is above its 50-candle average (about 4 hours); PE only if below.</li>
-      <li><b>Open interest:</b> looks at the 7 strikes around the current price over the last 15 minutes. CE only if put open interest grew more than call open interest (option sellers betting Nifty won't fall); PE the opposite.</li>
-      <li><b>India VIX:</b> skip if VIX is below 11. Nifty barely moves then, and option buyers usually lose to time decay.</li>
-      <li><b>Not too expensive:</b> the app works out the option's implied volatility (how much "fear" is priced in). Skip if it is more than 1.3 times India VIX.</li>
-      <li><b>Liquidity:</b> skip if the gap between the best buy and sell price is more than ₹0.50 or 1% of the price.</li>
+      <li><b>Big players (OI):</b> every 5 minutes it compares with 30 minutes ago. UP bet when futures traders are buying and more puts than calls were sold. DOWN bet in the opposite case.</li>
+      <li><b>Morning breakout:</b> notes Nifty's high and low from 9:15 to 9:30. UP bet when Nifty breaks above that high; DOWN bet when it breaks below the low.</li>
+      <li><b>Trend turn:</b> UP bet when Nifty's short-term average (last 45 min) crosses above its longer average (last 1¾ hours); DOWN bet when it crosses below.</li>
     </ul>
-    <b style="color:var(--text)">For every trade</b>
+    <h3>Safety checks before every trade (all must pass)</h3>
     <ul>
-      <li>1 lot of the at-the-money option. Plain versions use the nearest weekly expiry (next one on expiry day). New entries only 9:30 am–2:30 pm. Stop-loss −25% of premium, target +40%, everything closed by 3:15 pm. At most one trade per strategy per day. Skipped if 1 lot costs more than ₹20,000.</li>
-      <li><b>Daily pick:</b> once any version has 10+ paper trades, the pick is the version with the best paper profit after charges (among those with 10+). Before that, the filtered version of the strategy with the best recent backtest. If nothing is in profit, the day is skipped.</li>
-      <li><b>Charges</b> are estimated: ₹20 brokerage per order, 0.15% STT on the sell side, exchange fees, SEBI fee, stamp duty and 18% GST.</li>
-      <li>Keep this page open on one device from before 9:15 am to 3:30 pm. Zerodha requires a fresh login every morning.</li>
+      <li><b>Enough days left:</b> uses an option with at least 2 days before expiry, so it doesn't lose value too fast.</li>
+      <li><b>Market direction agrees:</b> UP bets only when Nifty is above its 4-hour average; DOWN bets only when below.</li>
+      <li><b>Big players agree:</b> for the breakout and trend ideas, OI must point the same way.</li>
+      <li><b>Enough room to move:</b> the ceiling (for UP) or floor (for DOWN) must be at least 75 points away.</li>
+      <li><b>Market is moving enough:</b> fear index at 11 or above.</li>
+      <li><b>Price not too costly:</b> skips options priced unusually high compared with the fear index.</li>
+      <li><b>Easy to buy and sell:</b> the gap between buy and sell price must be small.</li>
     </ul>
-  </section>
+    <h3>Trade rules</h3>
+    <ul>
+      <li>New trades only 9:30 am to 1:30 pm. Everything is closed by 3:15 pm. One trade per plan per day. Never more than ₹20,000 per trade.</li>
+      <li><b>Single option:</b> loss limit −30%, target +50%. Once up 25%, the loss limit moves to +5% so a winner can't turn into a loser.</li>
+      <li><b>Safer pair:</b> loss limit −35%, target +40%. Once up 20%, the loss limit moves to break-even.</li>
+      <li>Practice prices use the real buy and sell prices, and the results include all charges (brokerage, STT, exchange fees, GST, stamp duty).</li>
+      <li><b>Today's plan:</b> the plan with the best profit after 10+ practice trades. Until one exists, the app tests plans one by one, safer pairs first.</li>
+    </ul>
+    <h3>Your daily routine</h3>
+    <ul>
+      <li>Before 9:15 am: open this page, log in to Zerodha, press Start. Keep the page open and the laptop awake until 3:30 pm.</li>
+      <li>Telegram tells you when the app starts, when today's plan buys and sells, and sends a summary after 3:30 pm.</li>
+      <li>Don't use real money until "Is it working?" turns green.</li>
+    </ul>
+  </details>
 </main>
-
 <script>
 "use strict";
 // ---------- Settings ----------
 const CAPITAL = 20000;          // your planned capital
-const SL_PCT = 0.25;            // stop-loss: premium falls 25%
-const TGT_PCT = 0.40;           // target: premium rises 40%
 const NIFTY_TOKEN = 256265;     // Zerodha's id for the Nifty 50 index
 const VIX_SYMBOL = "NSE:INDIA VIX";
-const MIN_DAYS = 2;             // filter: at least 2 days to expiry
-const VIX_MIN = 11;             // filter: skip when India VIX is below this
-const IV_MAX_RATIO = 1.3;       // filter: skip when option IV > 1.3 × VIX
-const OI_LOOKBACK = 15 * 60000; // filter: open interest change over 15 minutes
+const MIN_DAYS = 2;             // trade options with at least 2 days to expiry
+const VIX_MIN = 11;             // skip when India VIX is below this
+const IV_MAX_RATIO = 1.3;       // skip when option IV > 1.3 × VIX
+const OI_LOOKBACK = 30 * 60000; // compare open interest over 30 minutes
+const OI_ROOM = 75;             // points of room needed to the nearest OI wall
+const SPREAD_WIDTH = 150;       // spread: sell the option 150 points further out
 const RISK_FREE = 0.065;        // for the implied volatility calculation
+const ENTRY_FROM = 570, ENTRY_TO = 810, TIME_EXIT = 915; // 9:30 am, 1:30 pm, 3:15 pm
+const SINGLE = { stop: 0.30, target: 0.50, trailAt: 0.25, trailTo: 0.05 };
+const SPREAD = { stop: 0.35, target: 0.40, trailAt: 0.20, trailTo: 0.0 };
+const MAX_PICK_BLOCK_ALERTS = 3;
 
-const BASES = { ema: "EMA crossover (9/21)", orb: "Opening range breakout", rsi: "RSI reversal (14)" };
+const BASES = { oi: "Big players (OI)", orb: "Morning breakout", ema: "Trend turn" };
 const BASE_KEYS = Object.keys(BASES);
-const KEYS = ["ema", "ema_f", "orb", "orb_f", "rsi", "rsi_f"];
-const isF = (k) => k.endsWith("_f");
-const baseOf = (k) => k.replace("_f", "");
-const nameOf = (k) => (BASES[baseOf(k)] || k) + (isF(k) ? " + filters" : "");
+const KEYS = ["oi_spr", "oi_opt", "orb_spr", "orb_opt", "ema_spr", "ema_opt"];
+const isSpread = (k) => k.endsWith("_spr");
+const baseOf = (k) => k.split("_")[0];
+const LEGACY = {
+  ema: "Old test: trend", orb: "Old test: breakout", rsi: "Old test: RSI",
+  ema_f: "Old test: trend + checks", orb_f: "Old test: breakout + checks", rsi_f: "Old test: RSI + checks"
+};
+const nameOf = (k) => KEYS.indexOf(k) >= 0 ? BASES[baseOf(k)] + (isSpread(k) ? " · Safer pair" : " · Single option") : (LEGACY[k] || k);
 const FILTERS = {
-  expiry: "Expiry ≥ 2 days",
-  trend: "Bigger trend",
-  oi: "Open interest",
-  vix: "India VIX",
-  iv: "Not too expensive",
-  liq: "Liquidity"
+  expiry: "Enough days left",
+  trend: "Market direction agrees",
+  oi: "Big players agree",
+  room: "Enough room to move",
+  vix: "Market is moving enough",
+  iv: "Price not too costly",
+  liq: "Easy to buy and sell"
+};
+const sideWord = (s) => (s === "CE" ? "UP bet (Call)" : "DOWN bet (Put)");
+const aSide = (s) => (s === "CE" ? "an " : "a ") + sideWord(s);
+const MOOD = {
+  "Long buildup": "Buying more (bullish)", "Short covering": "Sellers getting out (bullish)",
+  "Short buildup": "Selling more (bearish)", "Long unwinding": "Buyers getting out (bearish)"
 };
 
 // ---------- Helpers ----------
@@ -209,13 +346,13 @@ function istParts(ms) {
 }
 const today = () => istParts().date;
 const hhmm = (ms) => istParts(ms).hms.slice(0, 5);
-const marketOpen = () => { const m = istParts().mins; return m >= 555 && m < 930; };
 function kiteTime(ms) { return new Date(ms + IST).toISOString().slice(0, 19).replace("T", " "); }
 function rs(n) {
   if (n == null || isNaN(n)) return "—";
   const v = Number(n);
   return (v < 0 ? "−₹" : "₹") + Math.abs(v).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
+const sgn = (n) => (n >= 0 ? "+" : "−") + Math.abs(n).toLocaleString("en-IN");
 const r2 = (n) => Math.round(n * 100) / 100;
 const cls = (n) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
@@ -225,6 +362,7 @@ function fmtExpiry(x) {
   return d.getUTCDate() + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()];
 }
 const daysLeft = (exp) => Math.round((Date.parse(exp + "T00:00:00Z") - Date.parse(today() + "T00:00:00Z")) / 86400000);
+const filterNames = (failed) => String(failed || "").split(",").filter(Boolean).map((f) => FILTERS[f] || f).join(", ");
 
 // ---------- State ----------
 let cfg = store.get("np_cfg", null);
@@ -232,13 +370,14 @@ const S = {
   token: null, user: null, sessionDate: null, apiKey: null, options: null,
   candles: [], lastNifty: null, vix: null, ws: null, wsRetry: 0, running: false,
   positions: {}, optLtp: {}, trades: [], skips: [], backtest: {}, pick: null,
-  processedBucket: 0, pending: {}, skippedCost: {}, oiSnaps: [], wakeLock: null, log: []
+  processedBucket: 0, pending: {}, skippedCost: {}, lastSkip: {}, signals: {},
+  snaps: [], view: null, closeChain: Promise.resolve(), wakeLock: null, log: []
 };
 
 function msg(t) { $("msg").textContent = t || ""; }
 function log(t) {
   S.log.unshift(hhmm(Date.now()) + "  " + t);
-  S.log = S.log.slice(0, 80);
+  S.log = S.log.slice(0, 100);
   $("activity").innerHTML = S.log.map((l) => "<div>" + esc(l) + "</div>").join("");
 }
 
@@ -251,8 +390,16 @@ async function api(action, data) {
   });
   let j = {};
   try { j = await r.json(); } catch (e) {}
-  if (!r.ok || j.error) throw new Error(j.error || ("Server error " + r.status));
+  if (!r.ok || j.error) throw new Error(j.error || j.message || j.msg || ("Server error " + r.status));
   return j;
+}
+
+// Zerodha allows about 1 quote request per second, so quote requests wait their turn.
+let quoteChain = Promise.resolve();
+function quote(symbols) {
+  const p = quoteChain.then(() => api("quote", { access_token: S.token, symbols }));
+  quoteChain = p.catch(() => {}).then(() => new Promise((r) => setTimeout(r, 400)));
+  return p.then((r) => r.data || {});
 }
 
 // ---------- Indicators ----------
@@ -265,19 +412,9 @@ function ema(vals, p) {
   }
   return out;
 }
-function rsi(vals, p) {
-  const out = new Array(vals.length).fill(null);
-  let ag = 0, al = 0;
-  for (let i = 1; i < vals.length; i++) {
-    const ch = vals[i] - vals[i - 1], g = Math.max(ch, 0), l = Math.max(-ch, 0);
-    if (i <= p) { ag += g / p; al += l / p; if (i === p) out[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al); }
-    else { ag = (ag * (p - 1) + g) / p; al = (al * (p - 1) + l) / p; out[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al); }
-  }
-  return out;
-}
 function prep(cs) {
   const c = cs.map((x) => x.c);
-  return { e9: ema(c, 9), e21: ema(c, 21), e50: ema(c, 50), r: rsi(c, 14) };
+  return { e9: ema(c, 9), e21: ema(c, 21), e50: ema(c, 50) };
 }
 function dayStart(cs, i) {
   const d = istParts(cs[i].t).date;
@@ -292,7 +429,7 @@ function orbRange(cs, d0, i) {
   return { hi, lo, mid: (hi + lo) / 2 };
 }
 
-// Signals at candle index i (a closed candle). d0 = first candle of that day.
+// Price signals at candle index i (a closed candle). d0 = first candle of that day.
 function evalAt(st, cs, ind, i, d0) {
   const res = { entry: null, exitCE: false, exitPE: false };
   if (i < 1) return res;
@@ -311,18 +448,10 @@ function evalAt(st, cs, ind, i, d0) {
     else if (p >= R.lo && c < R.lo) res.entry = "PE";
     res.exitCE = c < R.mid;
     res.exitPE = c > R.mid;
-  } else if (st === "rsi") {
-    const r = ind.r;
-    if (r[i] == null || r[i - 1] == null) return res;
-    if (r[i - 1] < 30 && r[i] >= 30) res.entry = "CE";
-    else if (r[i - 1] > 70 && r[i] <= 70) res.entry = "PE";
-    res.exitCE = r[i] >= 50;
-    res.exitPE = r[i] <= 50;
   }
   return res;
 }
-const inEntryWindow = (closeMins) => closeMins >= 570 && closeMins <= 870; // 9:30 to 2:30
-const TIME_EXIT = 915; // 3:15 pm
+const inEntryWindow = (closeMins) => closeMins >= ENTRY_FROM && closeMins <= ENTRY_TO;
 
 // ---------- Option maths (Black-Scholes, for implied volatility) ----------
 function ncdf(x) {
@@ -349,10 +478,10 @@ function impliedVol(type, price, spot, K, T) {
 }
 function yearsToExpiry(exp) { return (Date.parse(exp + "T15:30:00+05:30") - Date.now()) / (365 * 86400000); }
 
-// ---------- Backtest (plain rules, Nifty index points, past days only) ----------
+// ---------- Backtest (price signal + trend filter, Nifty index points, past days only) ----------
 function runBacktest(cs) {
   const ind = prep(cs), out = {}, td = today();
-  for (const st of BASE_KEYS) {
+  for (const st of ["orb", "ema"]) {
     const pts = [];
     let pos = null, d0 = 0, cur = null, traded = false;
     for (let i = 0; i < cs.length; i++) {
@@ -368,27 +497,27 @@ function runBacktest(cs) {
         if ((pos.side === "CE" && ev.exitCE) || (pos.side === "PE" && ev.exitPE) || closeMins >= TIME_EXIT) {
           pts.push(pnlPts(pos, cs[i].c)); pos = null;
         }
-      } else if (!traded && ev.entry && inEntryWindow(closeMins)) {
-        pos = { side: ev.entry, entry: cs[i].c }; traded = true;
+      } else if (!traded && ev.entry && inEntryWindow(closeMins) && ind.e50[i] != null) {
+        const trendOk = ev.entry === "CE" ? cs[i].c > ind.e50[i] : cs[i].c < ind.e50[i];
+        if (trendOk) { pos = { side: ev.entry, entry: cs[i].c }; traded = true; }
       }
     }
     if (pos && cs.length) pts.push(pnlPts(pos, cs[cs.length - 1].c));
-    let streak = 0, worst = 0;
-    for (const x of pts) { if (x <= 0) { streak++; worst = Math.max(worst, streak); } else streak = 0; }
-    out[st] = { n: pts.length, wins: pts.filter((x) => x > 0).length, pts: pts.reduce((a, b) => a + b, 0), worst };
+    out[st] = { n: pts.length, wins: pts.filter((x) => x > 0).length, pts: pts.reduce((a, b) => a + b, 0) };
   }
   return out;
 }
 function pnlPts(pos, px) { return pos.side === "CE" ? px - pos.entry : pos.entry - px; }
 
-// ---------- Charges (estimate, Zerodha options buy + sell) ----------
-function charges(entry, exit, qty) {
-  const buy = entry * qty, sell = exit * qty, turnover = buy + sell;
-  const brokerage = 40;                    // ₹20 per order × 2
-  const stt = sell * 0.0015;               // 0.15% on sell premium (from 1 Apr 2026)
-  const exch = turnover * 0.0003503;       // NSE transaction charge
-  const sebi = turnover * 0.000001;        // ₹10 per crore
-  const stamp = buy * 0.00003;             // 0.003% on buy
+// ---------- Charges (estimate, Zerodha options) ----------
+// buys / sells = per-unit prices of every buy and sell order in the trade
+function chargesFor(buys, sells, qty) {
+  const b = buys.reduce((a, x) => a + x, 0) * qty, s = sells.reduce((a, x) => a + x, 0) * qty, t = b + s;
+  const brokerage = 20 * (buys.length + sells.length); // ₹20 per order
+  const stt = s * 0.0015;                  // 0.15% on sell premium (from 1 Apr 2026)
+  const exch = t * 0.0003503;              // NSE transaction charge
+  const sebi = t * 0.000001;               // ₹10 per crore
+  const stamp = b * 0.00003;               // 0.003% on buy
   const gst = 0.18 * (brokerage + exch + sebi);
   return r2(brokerage + stt + exch + sebi + stamp + gst);
 }
@@ -409,23 +538,24 @@ function statsFor(list) {
 const closedTrades = () => S.trades.filter((t) => t.status === "closed");
 
 function computePick() {
-  const closed = closedTrades();
-  const live = {};
-  for (const k of KEYS) live[k] = statsFor(closed.filter((t) => t.strategy === k));
-  const proven = KEYS.filter((k) => live[k].n >= 10);
-  if (proven.length) {
-    let best = null;
-    for (const k of proven) if (!best || live[k].net > best.score) best = { k, score: live[k].net };
-    if (best.score <= 0) return { k: null, why: "None of the versions with 10+ paper trades is in profit after charges, so today is skipped." };
-    return { k: best.k, why: "Best paper result among versions with 10+ trades: " + rs(best.score) + " net after charges over " + live[best.k].n + " trades." };
+  const closed = closedTrades(), st = {};
+  for (const k of KEYS) st[k] = statsFor(closed.filter((t) => t.strategy === k));
+  const good = KEYS.filter((k) => st[k].n >= 10 && st[k].net > 0).sort((a, b) => st[b].net - st[a].net);
+  if (good.length) {
+    const k = good[0];
+    return { k, why: "Chosen because it has made the most so far: " + rs(st[k].net) + " after charges in " + st[k].n + " practice trades." };
   }
-  let best = null;
-  for (const b of BASE_KEYS) {
-    const bt = S.backtest[b];
-    if (bt && bt.n >= 10 && (!best || bt.pts > best.score)) best = { b, score: bt.pts };
+  const bt = (b) => (S.backtest[b] ? S.backtest[b].pts : -1e9);
+  const priceOrder = ["orb", "ema"].sort((a, b) => bt(b) - bt(a));
+  const order = ["oi_spr"].concat(priceOrder.map((b) => b + "_spr"), ["oi_opt"], priceOrder.map((b) => b + "_opt"));
+  const untested = order.filter((k) => st[k].n < 10);
+  const anyLosing = KEYS.some((k) => st[k].n >= 10);
+  if (untested.length) {
+    const k = untested[0];
+    return { k, why: (anyLosing ? "The plans tested 10+ times are losing, so the app is trying the next one. " : "") +
+      "This plan is still being tested (" + st[k].n + " of 10 practice trades done). Safer pairs are tested first because they lose value more slowly." };
   }
-  if (!best || best.score <= 0) return { k: null, why: "No strategy was in profit in the recent backtest, so today is skipped." };
-  return { k: best.b + "_f", why: "Best recent backtest: " + best.score.toFixed(0) + " Nifty points over " + S.backtest[best.b].n + " trades. Using its filtered version. Not enough paper trades yet to judge live." };
+  return { k: null, why: "All 6 plans have been tested 10+ times and all are losing after charges, so the app is sitting out today." };
 }
 
 // ---------- Notifications ----------
@@ -435,104 +565,128 @@ async function notify(text) {
   try { if ("Notification" in window && Notification.permission === "granted") new Notification("Nifty Paper Trader", { body: text }); } catch (e) {}
 }
 
-// ---------- Expiry choice ----------
-function plainExpiry() {
-  const e = S.options.expiries;
-  return (e[0] === today() && e[1]) ? e[1] : e[0];
-}
-function filterExpiry() {
-  const e = S.options.expiries;
-  return e.find((x) => daysLeft(x) >= MIN_DAYS) || e[e.length - 1];
-}
-function strikesAround(spot, exp, width) {
-  const atm = Math.round(spot / 50) * 50, ks = [];
-  for (let d = -width; d <= width; d++) ks.push(atm + d * 50);
-  return S.options.items.filter((x) => x.x === exp && ks.indexOf(x.k) >= 0);
+// ---------- Instruments ----------
+function expiryWith(minDays) { return (S.options.expiries || []).find((x) => daysLeft(x) >= minDays) || null; }
+const tradeExpiry = () => expiryWith(MIN_DAYS);
+const oiExpiry = () => expiryWith(1);
+function future() { const f = S.options.futs || []; return f.find((x) => daysLeft(x.x) >= 3) || f[f.length - 1] || null; }
+function inst(exp, k, y) { return S.options.items.find((x) => x.x === exp && x.k === k && x.y === y) || null; }
+function strikeList(spot, w) {
+  const atm = Math.round(spot / 50) * 50, a = [];
+  for (let d = -w; d <= w; d++) a.push(atm + d * 50);
+  return a;
 }
 
-// ---------- Open interest snapshots (every 5 minutes) ----------
-async function takeOISnapshot() {
-  if (!S.running || !marketOpen() || S.lastNifty == null || !S.options) return;
+// ---------- Market snapshot every 5 minutes (prices, bid/ask, open interest, VIX, futures) ----------
+async function takeSnapshot() {
+  if (!S.options || S.lastNifty == null) return null;
+  const spot = S.lastNifty;
+  const exps = [...new Set([oiExpiry(), tradeExpiry()].filter(Boolean))];
+  const syms = [VIX_SYMBOL];
+  for (const e of exps) for (const k of strikeList(spot, 5)) for (const y of ["CE", "PE"]) { const it = inst(e, k, y); if (it) syms.push("NFO:" + it.s); }
+  const f = future();
+  if (f) syms.push("NFO:" + f.s);
   try {
-    const insts = strikesAround(S.lastNifty, filterExpiry(), 3);
-    const q = (await api("quote", { access_token: S.token, symbols: insts.map((x) => "NFO:" + x.s).concat([VIX_SYMBOL]) })).data;
-    const oi = {};
-    for (const x of insts) { const d = q["NFO:" + x.s]; if (d && d.oi != null) oi[x.t] = { oi: d.oi, y: x.y }; }
-    if (q[VIX_SYMBOL]) S.vix = q[VIX_SYMBOL].ltp;
-    S.oiSnaps.push({ t: Date.now(), oi });
-    S.oiSnaps = S.oiSnaps.filter((s) => Date.now() - s.t < 3600000);
-  } catch (e) { log("Open interest snapshot failed: " + e.message); }
+    const q = await quote(syms);
+    const fq = f ? q["NFO:" + f.s] : null;
+    const snap = { t: Date.now(), spot, q, vix: q[VIX_SYMBOL] ? q[VIX_SYMBOL].ltp : null, fut: fq && fq.oi != null ? { ltp: fq.ltp, oi: fq.oi } : null };
+    if (snap.vix != null) S.vix = snap.vix;
+    S.snaps.push(snap);
+    S.snaps = S.snaps.filter((s) => snap.t - s.t < 2 * 3600000);
+    S.view = oiView(snap);
+    return snap;
+  } catch (e) { log("Market snapshot failed: " + e.message); return null; }
 }
 
-// ---------- The six filters ----------
-async function checkFilters(base, side, spot) {
-  const cs = S.candles, i = cs.length - 1, ind = prep(cs);
-  const res = {};
-  const exp = filterExpiry();
-  const dl = daysLeft(exp);
-  res.expiry = { pass: dl >= MIN_DAYS, detail: dl + " days left (" + fmtExpiry(exp) + ")" };
+function oiView(cur) {
+  const exp = oiExpiry();
+  if (!exp) return null;
+  const old = S.snaps.filter((s) => cur.t - s.t >= OI_LOOKBACK - 60000).pop();
+  let ceNow = 0, peNow = 0, dCE = 0, dPE = 0, n = 0, resK = null, resOI = -1, supK = null, supOI = -1;
+  for (const k of strikeList(cur.spot, 5)) {
+    const ce = inst(exp, k, "CE"), pe = inst(exp, k, "PE");
+    if (!ce || !pe) continue;
+    const qc = cur.q["NFO:" + ce.s], qp = cur.q["NFO:" + pe.s];
+    if (!qc || !qp || qc.oi == null || qp.oi == null) continue;
+    ceNow += qc.oi; peNow += qp.oi;
+    if (k > cur.spot && qc.oi > resOI) { resOI = qc.oi; resK = k; }
+    if (k < cur.spot && qp.oi > supOI) { supOI = qp.oi; supK = k; }
+    if (old) {
+      const oc = old.q["NFO:" + ce.s], op = old.q["NFO:" + pe.s];
+      if (oc && op && oc.oi != null && op.oi != null) { dCE += qc.oi - oc.oi; dPE += qp.oi - op.oi; n++; }
+    }
+  }
+  const v = { exp, pcr: ceNow ? peNow / ceNow : null, res: resK, sup: supK, ready: !!old && n > 0,
+              mins: old ? Math.round((cur.t - old.t) / 60000) : 0, dCE, dPE, dP: null, dOI: null, buildup: null };
+  if (old && old.fut && cur.fut) {
+    v.dP = cur.fut.ltp - old.fut.ltp;
+    v.dOI = cur.fut.oi - old.fut.oi;
+    v.buildup = v.dP >= 0 ? (v.dOI >= 0 ? "Long buildup" : "Short covering") : (v.dOI >= 0 ? "Short buildup" : "Long unwinding");
+  }
+  return v;
+}
+
+function oiSignal(v, spot) {
+  const r = { entry: null, exitCE: false, exitPE: false };
+  if (!v || !v.ready || v.dP == null) return r;
+  const minMove = spot * 0.0005;
+  const bull = (v.buildup === "Long buildup" || v.buildup === "Short covering") && v.dP >= minMove && v.dPE > v.dCE && v.dPE > 0;
+  const bear = (v.buildup === "Short buildup" || v.buildup === "Long unwinding") && -v.dP >= minMove && v.dCE > v.dPE && v.dCE > 0;
+  r.entry = bull ? "CE" : bear ? "PE" : null;
+  r.exitCE = bear;
+  r.exitPE = bull;
+  return r;
+}
+
+// ---------- Filters ----------
+function liquid(q) { return !!q && q.bid > 0 && q.ask > 0 && (q.ask - q.bid) <= Math.max(0.5, q.ltp * 0.01); }
+
+function checkFilters(base, side, snap, v, spread) {
+  const res = {}, cs = S.candles, i = cs.length - 1, ind = prep(cs), spot = snap.spot;
+  const exp = tradeExpiry();
+  res.expiry = exp ? { pass: true, detail: daysLeft(exp) + " days left (" + fmtExpiry(exp) + ")" } : { pass: false, detail: "No expiry with 2+ days" };
 
   const e50 = ind.e50[i], c = cs[i].c;
-  if (e50 == null) res.trend = { pass: false, detail: "Not enough candles yet" };
-  else res.trend = { pass: side === "CE" ? c > e50 : c < e50, detail: "Nifty " + c.toFixed(0) + " vs 50-avg " + e50.toFixed(0) };
+  res.trend = e50 == null ? { pass: false, detail: "Not enough candles yet" }
+    : { pass: side === "CE" ? c > e50 : c < e50, detail: "Nifty " + c.toFixed(0) + " vs 50-avg " + e50.toFixed(0) };
 
-  const insts = strikesAround(spot, exp, 3);
-  const atm = Math.round(spot / 50) * 50;
-  const target = insts.find((x) => x.k === atm && x.y === side);
-  if (!target) throw new Error("option " + atm + " " + side + " not found");
-  const q = (await api("quote", { access_token: S.token, symbols: insts.map((x) => "NFO:" + x.s).concat([VIX_SYMBOL]) })).data;
+  if (base === "oi") res.oi = { pass: true, detail: "Open interest is this strategy's own signal" };
+  else if (!v || !v.ready) res.oi = { pass: false, detail: "Needs 30 minutes of running" };
+  else res.oi = { pass: side === "CE" ? v.dPE > v.dCE : v.dCE > v.dPE, detail: "In " + v.mins + " min: call OI " + sgn(v.dCE) + ", put OI " + sgn(v.dPE) };
 
-  // India VIX
-  const vix = q[VIX_SYMBOL] ? q[VIX_SYMBOL].ltp : null;
-  if (vix != null) S.vix = vix;
+  if (!v) res.room = { pass: false, detail: "No open interest data" };
+  else if (side === "CE") res.room = v.res == null ? { pass: true, detail: "No call wall above" }
+    : { pass: v.res - spot >= OI_ROOM, detail: "Call wall " + v.res + " is " + (v.res - spot).toFixed(0) + " pts away (need " + OI_ROOM + ")" };
+  else res.room = v.sup == null ? { pass: true, detail: "No put wall below" }
+    : { pass: spot - v.sup >= OI_ROOM, detail: "Put wall " + v.sup + " is " + (spot - v.sup).toFixed(0) + " pts away (need " + OI_ROOM + ")" };
+
+  const vix = snap.vix;
   res.vix = vix == null ? { pass: false, detail: "VIX not available" } : { pass: vix >= VIX_MIN, detail: "VIX " + vix.toFixed(2) + " (need ≥ " + VIX_MIN + ")" };
 
-  // Implied volatility vs VIX
-  const T = yearsToExpiry(exp);
-  const ce = insts.find((x) => x.k === atm && x.y === "CE"), pe = insts.find((x) => x.k === atm && x.y === "PE");
-  const ivs = [];
-  if (ce && q["NFO:" + ce.s]) ivs.push(impliedVol("CE", q["NFO:" + ce.s].ltp, spot, atm, T));
-  if (pe && q["NFO:" + pe.s]) ivs.push(impliedVol("PE", q["NFO:" + pe.s].ltp, spot, atm, T));
-  const good = ivs.filter((v) => isFinite(v));
-  if (!good.length || vix == null) res.iv = { pass: false, detail: "Couldn't work out implied volatility" };
-  else {
-    const iv = good.reduce((a, b) => a + b, 0) / good.length * 100;
-    res.iv = { pass: iv <= vix * IV_MAX_RATIO, detail: "Option IV " + iv.toFixed(1) + "% vs limit " + (vix * IV_MAX_RATIO).toFixed(1) + "%" };
+  let legs = null;
+  if (exp) {
+    const atm = Math.round(spot / 50) * 50;
+    const L = inst(exp, atm, side);
+    const Sh = spread ? inst(exp, side === "CE" ? atm + SPREAD_WIDTH : atm - SPREAD_WIDTH, side) : null;
+    legs = { exp, long: L, short: Sh, ql: L ? snap.q["NFO:" + L.s] : null, qs: Sh ? snap.q["NFO:" + Sh.s] : null };
   }
 
-  // Open interest change over 15 minutes
-  const old = S.oiSnaps.filter((s) => Date.now() - s.t >= OI_LOOKBACK).pop();
-  if (!old) res.oi = { pass: false, detail: "Needs 15 minutes of running to compare" };
+  if (!legs || !legs.ql || vix == null) res.iv = { pass: false, detail: "Couldn't work out implied volatility" };
   else {
-    let dCE = 0, dPE = 0, n = 0;
-    for (const x of insts) {
-      const now = q["NFO:" + x.s], then = old.oi[x.t];
-      if (!now || now.oi == null || !then) continue;
-      n++;
-      if (x.y === "CE") dCE += now.oi - then.oi; else dPE += now.oi - then.oi;
-    }
-    if (!n) res.oi = { pass: false, detail: "No matching strikes to compare" };
-    else {
-      const mins = Math.round((Date.now() - old.t) / 60000);
-      res.oi = { pass: side === "CE" ? dPE > dCE : dCE > dPE,
-                 detail: "In " + mins + " min: call OI " + (dCE >= 0 ? "+" : "") + dCE.toLocaleString("en-IN") + ", put OI " + (dPE >= 0 ? "+" : "") + dPE.toLocaleString("en-IN") };
-    }
+    const iv = impliedVol(side, legs.ql.ltp, spot, legs.long.k, yearsToExpiry(exp)) * 100;
+    res.iv = isFinite(iv) ? { pass: iv <= vix * IV_MAX_RATIO, detail: "Option IV " + iv.toFixed(1) + "% vs limit " + (vix * IV_MAX_RATIO).toFixed(1) + "%" }
+                          : { pass: false, detail: "Couldn't work out implied volatility" };
   }
 
-  // Liquidity
-  const tq = q["NFO:" + target.s];
-  if (!tq) res.liq = { pass: false, detail: "No quote for " + target.s };
-  else {
-    const spread = tq.ask - tq.bid;
-    const ok = tq.bid > 0 && tq.ask > 0 && spread <= Math.max(0.5, tq.ltp * 0.01);
-    res.liq = { pass: ok, detail: "Buy " + rs(tq.bid) + " / sell " + rs(tq.ask) };
-  }
+  if (!legs || !legs.ql || (spread && !legs.qs)) res.liq = { pass: false, detail: "Option quote missing" };
+  else res.liq = { pass: liquid(legs.ql) && (!spread || liquid(legs.qs)),
+    detail: "Buy leg " + rs(legs.ql.bid) + " / " + rs(legs.ql.ask) + (spread ? ", sell leg " + rs(legs.qs.bid) + " / " + rs(legs.qs.ask) : "") };
 
   const failed = Object.keys(FILTERS).filter((f) => !res[f] || !res[f].pass);
-  return { res, failed, target, exp, price: tq ? tq.ltp : null };
+  return { res, failed, legs };
 }
 
-// ---------- Live candles ----------
+// ---------- Live candles and ticks ----------
 function updateCandle(ms, px) {
   const b = Math.floor(ms / 300000) * 300000;
   const m = istParts(b).mins;
@@ -544,95 +698,138 @@ function updateCandle(ms, px) {
 
 function onTick(tok, ltp) {
   if (tok === NIFTY_TOKEN) { S.lastNifty = ltp; updateCandle(Date.now(), ltp); }
-  else { S.optLtp[tok] = ltp; checkRisk(tok, ltp); }
+  else { S.optLtp[tok] = ltp; checkRisk(tok, false); }
 }
 
-function checkRisk(tok, ltp) {
+function posValue(p) {
+  const a = S.optLtp[Number(p.token)];
+  if (a == null) return null;
+  if (p.structure !== "spread") return a;
+  const b = S.optLtp[Number(p.leg2_token)];
+  return b == null ? null : r2(a - b);
+}
+
+// Options are checked on every price tick. Spreads are checked once a second, and only exit when
+// the stop or target holds on two checks in a row, because the two legs' prices arrive at slightly
+// different moments and a half-updated spread can look like it hit its stop when it didn't.
+function checkRisk(tok, spreadsNow) {
   for (const k of KEYS) {
     const p = S.positions[k];
-    if (!p || Number(p.token) !== tok) continue;
-    if (ltp <= Number(p.stop_price)) exitPos(k, "Stop-loss (−25%)", ltp);
-    else if (ltp >= Number(p.target_price)) exitPos(k, "Target (+40%)", ltp);
+    if (!p || p.closing) continue;
+    const spread = p.structure === "spread";
+    if (spread !== !!spreadsNow) continue;
+    if (!spread && Number(p.token) !== tok) continue;
+    const val = posValue(p);
+    if (val == null) continue;
+    const e = Number(p.entry_price), R = spread ? SPREAD : SINGLE;
+    if (!p.trailed && val >= e * (1 + R.trailAt)) {
+      p.trailed = true;
+      p.stop_price = r2(e * (1 + R.trailTo));
+      log(nameOf(k) + ": up " + Math.round(R.trailAt * 100) + "%, loss limit raised to " + rs(p.stop_price) + " to protect the gain");
+    }
+    const hit = val <= Number(p.stop_price) ? (p.trailed ? "Profit protected" : "Loss limit hit")
+              : val >= Number(p.target_price) ? "Target reached" : null;
+    if (!hit) { p.breach = 0; continue; }
+    if (spread && (p.breach = (p.breach || 0) + 1) < 2) continue;
+    exitPos(k, hit);
   }
 }
 
 function onCandleClose(i) {
+  S.closeChain = S.closeChain.then(() => handleCandle(i)).catch((e) => log("Candle check failed: " + e.message));
+}
+
+async function handleCandle(i) {
   const cs = S.candles;
   if (istParts(cs[i].t).date !== today()) return;
-  takeOISnapshot();
-  const ind = prep(cs), d0 = dayStart(cs, i), closeMins = istParts(cs[i].t).mins + 5;
+  const snap = await takeSnapshot();
+  if (!snap) return;
+  const v = S.view, ind = prep(cs), d0 = dayStart(cs, i), closeMins = istParts(cs[i].t).mins + 5;
   for (const b of BASE_KEYS) {
-    const ev = evalAt(b, cs, ind, i, d0);
-    for (const k of [b, b + "_f"]) {
+    const ev = b === "oi" ? oiSignal(v, snap.spot) : evalAt(b, cs, ind, i, d0);
+    S.signals[b] = ev;
+    for (const k of [b + "_spr", b + "_opt"]) {
       const pos = S.positions[k];
       if (pos) {
-        if ((pos.side === "CE" && ev.exitCE) || (pos.side === "PE" && ev.exitPE)) exitPos(k, "Strategy exit signal");
+        if ((pos.side === "CE" && ev.exitCE) || (pos.side === "PE" && ev.exitPE)) await exitPos(k, "Signal turned the other way");
       } else if (ev.entry && inEntryWindow(closeMins) && !tradedToday(k)) {
-        enterPos(k, ev.entry);
+        await enterPos(k, ev.entry, snap, v);
       }
     }
   }
+  render();
 }
 function tradedToday(k) {
   return !!S.pending[k] || S.trades.some((t) => t.trade_date === today() && t.strategy === k);
 }
 
 // ---------- Paper entries and exits ----------
-async function enterPos(k, side) {
+async function recordBlock(k, side, snap, chk) {
+  const key = k + side, failed = chk.failed.join(","), last = S.lastSkip[key];
+  if (last && last.failed === failed && Date.now() - last.t < 30 * 60000) return; // don't repeat the same block every 5 minutes
+  S.lastSkip[key] = { failed, t: Date.now() };
+  const skip = { trade_date: today(), strategy: k, side, nifty: snap.spot, failed, details: chk.res };
+  try { const r = await api("skip_log", { skip }); S.skips.unshift(r.skip || Object.assign({ at: new Date().toISOString() }, skip)); }
+  catch (e) { S.skips.unshift(Object.assign({ at: new Date().toISOString() }, skip)); }
+  log(nameOf(k) + ": wanted " + aSide(side) + ", skipped because: " + filterNames(failed));
+  if (S.pick && S.pick.k === k) {
+    const a = store.get("np_blockalerts", { d: "", n: 0 });
+    if (a.d !== today()) { a.d = today(); a.n = 0; }
+    if (a.n < MAX_PICK_BLOCK_ALERTS) {
+      a.n++; store.set("np_blockalerts", a);
+      notify("⏸ No trade yet\nToday's plan (" + nameOf(k) + ") wanted " + aSide(side) + ", but skipped it because:\n• " +
+        filterNames(failed).split(", ").join("\n• ") + "\nIt will keep watching.");
+    }
+  }
+}
+
+async function enterPos(k, side, snap, v) {
   S.pending[k] = true;
   try {
-    const spot = S.lastNifty != null ? S.lastNifty : S.candles[S.candles.length - 1].c;
-    const strike = Math.round(spot / 50) * 50;
-    let inst, exp, price, filterNote = null;
-
-    if (isF(k)) {
-      const chk = await checkFilters(baseOf(k), side, spot);
-      if (chk.failed.length) {
-        const skip = { trade_date: today(), strategy: k, side, nifty: spot, failed: chk.failed.join(","), details: chk.res };
-        try { const r = await api("skip_log", { skip }); S.skips.unshift(r.skip || Object.assign({ at: new Date().toISOString() }, skip)); }
-        catch (e) { S.skips.unshift(Object.assign({ at: new Date().toISOString() }, skip)); }
-        log(nameOf(k) + ": " + side + " signal blocked by " + chk.failed.map((f) => FILTERS[f]).join(", "));
-        return;
-      }
-      inst = chk.target; exp = chk.exp; price = chk.price;
-      filterNote = Object.keys(FILTERS).map((f) => FILTERS[f] + ": " + chk.res[f].detail).join(" | ");
-    } else {
-      exp = plainExpiry();
-      inst = S.options.items.find((x) => x.x === exp && x.k === strike && x.y === side);
-      if (!inst) throw new Error("option " + strike + " " + side + " not found");
-      const q = await api("ltp", { access_token: S.token, symbols: ["NFO:" + inst.s] });
-      price = q.data && q.data["NFO:" + inst.s] ? q.data["NFO:" + inst.s].last_price : null;
-    }
-    if (!price) throw new Error("no price for " + inst.s);
-
-    const cost = price * inst.l;
+    const spread = isSpread(k), chk = checkFilters(baseOf(k), side, snap, v, spread);
+    if (chk.failed.length) { await recordBlock(k, side, snap, chk); return; }
+    const L = chk.legs, qty = L.long.l;
+    const l1 = L.ql.ask, l2 = spread ? L.qs.bid : null;
+    const entry = spread ? r2(l1 - l2) : l1;
+    if (!(entry > 0) || (spread && entry >= SPREAD_WIDTH)) throw new Error("unusual price " + entry);
+    const cost = entry * qty;
     if (cost > CAPITAL) {
-      if (S.skippedCost[k] !== today()) log(nameOf(k) + ": signal skipped, 1 lot costs " + rs(cost) + ", more than " + rs(CAPITAL));
+      if (S.skippedCost[k] !== today()) log(nameOf(k) + ": skipped, it would cost " + rs(cost) + ", more than " + rs(CAPITAL));
       S.skippedCost[k] = today();
       return;
     }
+    const R = spread ? SPREAD : SINGLE;
+    let target = entry * (1 + R.target);
+    if (spread) target = Math.min(target, entry + 0.8 * (SPREAD_WIDTH - entry)); // a spread can't be worth more than 150
+    const stop = r2(entry * (1 - R.stop));
+    target = r2(target);
     const isPick = !!(S.pick && S.pick.k === k);
-    const label = "NIFTY " + inst.k + " " + side + " (" + fmtExpiry(exp) + ")";
+    const label = "NIFTY " + L.long.k + (spread ? "/" + L.short.k : "") + " " + side + (spread ? " spread" : "") + " (" + fmtExpiry(L.exp) + ")";
     const trade = {
-      trade_date: today(), strategy: k, is_pick: isPick, side, symbol: inst.s, label, token: inst.t, qty: inst.l,
-      entry_time: new Date().toISOString(), entry_price: price, nifty_entry: spot,
-      stop_price: r2(price * (1 - SL_PCT)), target_price: r2(price * (1 + TGT_PCT)), filter_note: filterNote
+      trade_date: today(), strategy: k, is_pick: isPick, side, structure: spread ? "spread" : "single",
+      symbol: L.long.s, label, token: L.long.t, qty, entry_time: new Date().toISOString(), entry_price: entry,
+      leg1_entry: l1, leg2_symbol: spread ? L.short.s : null, leg2_token: spread ? L.short.t : null, leg2_entry: l2,
+      nifty_entry: snap.spot, stop_price: stop, target_price: target,
+      filter_note: Object.keys(FILTERS).map((f) => FILTERS[f] + ": " + chk.res[f].detail).join(" | ")
     };
     const r = await api("trade_open", { trade });
     if (r.duplicate) { await reloadTrades(); return; }
     S.trades.push(r.trade);
     S.positions[k] = r.trade;
-    S.optLtp[inst.t] = price;
-    subscribe([inst.t]);
-    log(nameOf(k) + ": paper BUY " + label + " at " + rs(price) + (isPick ? " (today's pick)" : ""));
+    S.optLtp[L.long.t] = L.ql.ltp;
+    if (spread) S.optLtp[L.short.t] = L.qs.ltp;
+    subscribe(spread ? [L.long.t, L.short.t] : [L.long.t]);
+    log(nameOf(k) + ": practice BUY " + label + " at " + rs(entry) + (isPick ? " (today's plan)" : ""));
     if (isPick) {
-      notify("📈 PAPER ENTRY (pretend money, not a real trade)\n" +
-        "Strategy: " + nameOf(k) + "\n" +
-        "BUY " + label + "\n" +
-        "Price " + rs(price) + " × " + inst.l + " = " + rs(cost) + "\n" +
-        "Nifty: " + spot.toFixed(2) + (S.vix != null ? " · VIX " + S.vix.toFixed(2) : "") + "\n" +
-        (isF(k) ? "All 6 filters passed\n" : "") +
-        "Stop-loss " + rs(trade.stop_price) + " · Target " + rs(trade.target_price) + " · Closes by 3:15 pm");
+      const exTxt = " (" + fmtExpiry(L.exp) + " expiry)";
+      const how = spread
+        ? "1) BUY  NIFTY " + L.long.k + " " + side + exTxt + " at " + rs(l1) + "\n2) SELL NIFTY " + L.short.k + " " + side + exTxt + " at " + rs(l2) +
+          "\nCost: " + rs(entry) + " × " + qty + " units = " + rs(cost)
+        : "BUY NIFTY " + L.long.k + " " + side + exTxt + " at " + rs(l1) + "\nCost: " + rs(l1) + " × " + qty + " units = " + rs(cost);
+      notify("📈 PRACTICE TRADE STARTED (pretend money)\n" +
+        sideWord(side) + " · " + nameOf(k) + "\n\n" + how + "\n\n" +
+        "Loss limit: gets out if it falls to " + rs(stop) + "\nTarget: takes profit at " + rs(target) + "\nCloses by 3:15 pm at the latest\n\n" +
+        "Nifty " + snap.spot.toFixed(2) + (v && v.buildup ? " · " + (MOOD[v.buildup] || v.buildup) : ""));
     }
   } catch (e) {
     log(nameOf(k) + ": entry failed: " + e.message);
@@ -642,36 +839,40 @@ async function enterPos(k, side) {
   }
 }
 
-async function exitPos(k, reason, tickPrice) {
+async function exitPos(k, reason) {
   const pos = S.positions[k];
   if (!pos || pos.closing) return;
   pos.closing = true;
   try {
-    let px = tickPrice;
-    if (px == null) {
-      try {
-        const q = await api("ltp", { access_token: S.token, symbols: ["NFO:" + pos.symbol] });
-        px = q.data["NFO:" + pos.symbol].last_price;
-      } catch (e) { px = S.optLtp[pos.token]; }
-    }
-    if (px == null) throw new Error("no exit price yet");
+    const spread = pos.structure === "spread";
+    const syms = ["NFO:" + pos.symbol].concat(spread ? ["NFO:" + pos.leg2_symbol] : []);
+    let q = {};
+    try { q = await quote(syms); } catch (e) { log(nameOf(k) + ": exit quote failed, using last prices"); }
+    const q1 = q["NFO:" + pos.symbol], q2 = spread ? q["NFO:" + pos.leg2_symbol] : null;
+    const x1 = q1 && q1.bid > 0 ? q1.bid : (q1 ? q1.ltp : S.optLtp[Number(pos.token)]);
+    const x2 = spread ? (q2 && q2.ask > 0 ? q2.ask : (q2 ? q2.ltp : S.optLtp[Number(pos.leg2_token)])) : null;
+    if (x1 == null || (spread && x2 == null)) throw new Error("no exit price yet");
     const entry = Number(pos.entry_price), qty = Number(pos.qty);
-    const gross = r2((px - entry) * qty), ch = charges(entry, px, qty), net = r2(gross - ch);
+    const exit = spread ? r2(x1 - x2) : x1;
+    const l1e = Number(pos.leg1_entry != null ? pos.leg1_entry : pos.entry_price);
+    const ch = spread ? chargesFor([l1e, x2], [Number(pos.leg2_entry), x1], qty) : chargesFor([l1e], [x1], qty);
+    const gross = r2((exit - entry) * qty), net = r2(gross - ch);
     const fields = {
-      exit_time: new Date().toISOString(), exit_price: px, nifty_exit: S.lastNifty, exit_reason: reason,
-      gross_pnl: gross, charges: ch, net_pnl: net, status: "closed"
+      exit_time: new Date().toISOString(), exit_price: exit, nifty_exit: S.lastNifty, exit_reason: reason,
+      gross_pnl: gross, charges: ch, net_pnl: net, status: "closed", leg1_exit: x1, leg2_exit: x2
     };
     await api("trade_close", { id: pos.id, fields });
     const t = S.trades.find((x) => x.id === pos.id);
     if (t) Object.assign(t, fields);
     delete S.positions[k];
-    log(nameOf(k) + ": paper EXIT " + (pos.label || pos.symbol) + " at " + rs(px) + ", " + reason + ", net " + rs(net));
+    log(nameOf(k) + ": practice SELL " + (pos.label || pos.symbol) + " at " + rs(exit) + " (" + reason + "), result " + rs(net));
     if (pos.is_pick) {
-      notify((net >= 0 ? "✅" : "🔻") + " PAPER EXIT (pretend money, not a real trade)\n" +
-        "Strategy: " + nameOf(k) + "\n" +
-        "SELL " + (pos.label || pos.symbol) + " at " + rs(px) + "\n" +
-        "Reason: " + reason + "\n" +
-        "Bought at " + rs(entry) + " · Profit/loss " + rs(gross) + " − charges " + rs(ch) + " = " + rs(net));
+      const how = spread
+        ? "1) SELL " + pos.symbol + " at " + rs(x1) + "\n2) BUY BACK " + pos.leg2_symbol + " at " + rs(x2)
+        : "SELL " + pos.symbol + " at " + rs(x1);
+      notify((net >= 0 ? "✅ PRACTICE TRADE CLOSED: PROFIT" : "🔻 PRACTICE TRADE CLOSED: LOSS") + " (pretend money)\n" +
+        (pos.label || pos.symbol) + "\nWhy: " + reason + "\n\n" + how + "\n\n" +
+        "Profit/loss: " + rs(gross) + "\nCharges: " + rs(ch) + "\nFinal result: " + rs(net));
     }
   } catch (e) {
     pos.closing = false;
@@ -680,18 +881,38 @@ async function exitPos(k, reason, tickPrice) {
   render();
 }
 
+// ---------- Daily summary ----------
+function sendSummary() {
+  store.set("np_summary", today());
+  const lines = KEYS.map((k) => {
+    const t = S.trades.find((x) => x.trade_date === today() && x.strategy === k && x.status === "closed");
+    if (t) return "• " + nameOf(k) + ": " + rs(t.net_pnl);
+    const sk = S.skips.find((s) => s.strategy === k && s.trade_date === today());
+    if (sk) return "• " + nameOf(k) + ": skipped (" + filterNames(sk.failed) + ")";
+    return "• " + nameOf(k) + ": no chance today";
+  });
+  const tot = r2(S.trades.filter((x) => x.trade_date === today() && x.status === "closed" && KEYS.indexOf(x.strategy) >= 0)
+    .reduce((a, x) => a + (Number(x.net_pnl) || 0), 0));
+  const pickT = S.pick && S.pick.k ? S.trades.find((x) => x.trade_date === today() && x.strategy === S.pick.k && x.status === "closed") : null;
+  notify("📋 Today's practice results (pretend money)\n" + lines.join("\n") +
+    "\n\nAll 6 plans together: " + rs(tot) +
+    "\nToday's plan (" + (S.pick && S.pick.k ? nameOf(S.pick.k) : "none") + "): " + (pickT ? rs(pickT.net_pnl) : "no trade"));
+}
+
 // ---------- Zerodha live feed ----------
-function setFeed(t) { $("stF").textContent = t; }
+function setFeed(t) { S.feed = t; }
+function positionTokens() {
+  const out = [];
+  for (const p of Object.values(S.positions)) { out.push(Number(p.token)); if (p.leg2_token) out.push(Number(p.leg2_token)); }
+  return out;
+}
 function connectWS() {
   if (S.ws) { try { S.ws.onclose = null; S.ws.close(); } catch (e) {} }
   const ws = new WebSocket("wss://ws.kite.trade?api_key=" + encodeURIComponent(S.apiKey) + "&access_token=" + encodeURIComponent(S.token));
   ws.binaryType = "arraybuffer";
   S.ws = ws;
   setFeed("Connecting…");
-  ws.onopen = () => {
-    S.wsRetry = 0; setFeed("Connected");
-    subscribe([NIFTY_TOKEN].concat(Object.values(S.positions).map((p) => Number(p.token))));
-  };
+  ws.onopen = () => { S.wsRetry = 0; setFeed("Connected"); subscribe([NIFTY_TOKEN].concat(positionTokens())); };
   ws.onmessage = (ev) => {
     if (typeof ev.data === "string") {
       try { const j = JSON.parse(ev.data); if (j.type === "error") log("Feed: " + j.data); } catch (e) {}
@@ -731,7 +952,7 @@ function everySecond() {
   $("stT").textContent = p.hms;
   if (S.running) {
     if (S.sessionDate !== today()) {
-      S.running = false; S.oiSnaps = [];
+      S.running = false; S.snaps = []; S.view = null;
       if (S.ws) { S.ws.onclose = null; S.ws.close(); }
       setFeed("Off");
       msg("New day: log in with Zerodha again, then press Start.");
@@ -743,107 +964,215 @@ function everySecond() {
         S.processedBucket = S.candles[lastClosed].t;
         onCandleClose(lastClosed);
       }
-      if (p.mins >= TIME_EXIT) for (const k of KEYS) if (S.positions[k]) exitPos(k, "Time exit 3:15 pm");
+      checkRisk(null, true);
+      if (p.mins >= TIME_EXIT) for (const k of KEYS) if (S.positions[k]) exitPos(k, "Closed at 3:15 pm");
+      const hadMarket = S.candles.length && istParts(S.candles[S.candles.length - 1].t).date === today();
+      if (p.mins >= 931 && hadMarket && store.get("np_summary", "") !== today() && !Object.keys(S.positions).length) sendSummary();
     }
   }
   render();
 }
 
 // ---------- Rendering ----------
-function render() {
-  $("stZ").textContent = S.token ? (S.user ? "Logged in: " + S.user : "Logged in") : "Not logged in";
-  $("stN").textContent = S.lastNifty != null ? S.lastNifty.toFixed(2) : "—";
-  $("stV").textContent = S.vix != null ? S.vix.toFixed(2) : "—";
-  $("loginBtn").disabled = !cfg;
-  $("startBtn").disabled = !cfg || !S.token || S.running;
-  $("startBtn").textContent = S.running ? "Running" : "Start";
-
-  // Pick
-  if (S.pick) {
-    $("pickBox").innerHTML = S.pick.k
-      ? "<b>" + esc(nameOf(S.pick.k)) + "</b><div class='small'>" + esc(S.pick.why) + "</div>"
-      : "<b>No trade today</b><div class='small'>" + esc(S.pick.why) + "</div>";
-  }
-
-  // Today's table
+const clamp = (x) => Math.max(0, Math.min(100, x));
+function pnlHtml(n, big) {
+  n = Number(n);
+  return "<b class='" + cls(n) + (big ? " bignum" : "") + "'>" + (n > 0 ? "+" : "") + rs(n) + "</b>";
+}
+function prevClose() {
+  const td = today();
+  for (let i = S.candles.length - 1; i >= 0; i--) if (istParts(S.candles[i].t).date !== td) return S.candles[i].c;
+  return null;
+}
+function moodOf(v) {
+  if (!v || !v.ready || !v.buildup) return { word: "Reading…", cls: "flat" };
+  const upF = v.buildup === "Long buildup" || v.buildup === "Short covering";
+  if (upF && v.dPE > v.dCE) return { word: "Leaning UP ▲", cls: "up" };
+  if (!upF && v.dCE > v.dPE) return { word: "Leaning DOWN ▼", cls: "down" };
+  return { word: "Mixed signals", cls: "flat" };
+}
+function planReading(b) {
   const cs = S.candles;
-  const read = { ema: "—", orb: "—", rsi: "—" };
-  if (cs.length > 25) {
-    const ind = prep(cs), i = cs.length - 1, d0 = dayStart(cs, i);
-    const a = ind.e9[i], b = ind.e21[i];
-    if (a != null && b != null) read.ema = "9-avg " + (a > b ? "above" : "below") + " 21-avg";
-    if (istParts(cs[i].t).date === today()) {
-      const R = orbRange(cs, d0, i);
-      read.orb = R ? "Range " + R.lo.toFixed(0) + "–" + R.hi.toFixed(0) : "Range forms 9:15–9:30";
-    }
-    if (ind.r[i] != null) read.rsi = "RSI " + ind.r[i].toFixed(1);
+  if (b === "oi") return moodOf(S.view).word;
+  if (cs.length < 25) return "";
+  const ind = prep(cs), i = cs.length - 1;
+  if (b === "ema") { const a = ind.e9[i], c = ind.e21[i]; return a == null || c == null ? "" : "Short-term trend " + (a > c ? "up" : "down"); }
+  if (b === "orb" && istParts(cs[i].t).date === today()) {
+    const R = orbRange(cs, dayStart(cs, i), i);
+    return R ? "Morning range " + Math.round(R.lo) + "–" + Math.round(R.hi) : "Morning range forms 9:15–9:30";
   }
-  $("todayBody").innerHTML = KEYS.map((k) => {
-    const p = S.positions[k];
+  return "";
+}
+
+function renderTrade() {
+  if (!S.pick) return "<div class='empty'><div class='em'>☀️</div><b>Not started yet</b><p>Log in to Zerodha, then press Start. On market days, do this before 9:15 am.</p></div>";
+  if (!S.pick.k) return "<div class='empty'><div class='em'>⏸</div><b>Sitting out today</b><p>" + esc(S.pick.why) + "</p></div>";
+  const k = S.pick.k, p = S.positions[k];
+  const head = "<div class='planline'>Today's plan: <b>" + esc(nameOf(k)) + "</b></div>";
+  const done = S.trades.find((t) => t.trade_date === today() && t.strategy === k && t.status === "closed");
+  if (p) {
+    const now = posValue(p), e = Number(p.entry_price), stop = Number(p.stop_price), tgt = Number(p.target_price);
+    const g = now != null ? r2((now - e) * p.qty) : null;
+    const pct = now != null ? clamp((now - stop) / (tgt - stop) * 100) : 50;
+    return head + "<span class='badge " + (p.side === "CE" ? "up" : "down") + "'>" + sideWord(p.side) + "</span>" +
+      "<div class='tname'>" + esc(p.label) + "</div>" +
+      (p.structure === "spread" ? "<div class='legs'>Bought " + esc(p.symbol) + " at " + rs(p.leg1_entry) + " · Sold " + esc(p.leg2_symbol) + " at " + rs(p.leg2_entry) + "</div>" : "") +
+      "<div class='nums'><div><span>Paid (per unit)</span><b>" + rs(e) + "</b></div><div><span>Worth now</span><b>" + (now != null ? rs(now) : "…") + "</b></div>" +
+      "<div><span>Profit / loss</span>" + (g != null ? pnlHtml(g, true) : "<b>…</b>") + "</div></div>" +
+      "<div class='range'><div class='track'><div class='dot' style='left:" + pct + "%'></div></div>" +
+      "<div class='ends'><span>Loss limit " + rs(stop) + "</span><span>Target " + rs(tgt) + "</span></div></div>" +
+      "<p class='hint'>Bought at " + hhmm(Date.parse(p.entry_time)) + " for " + p.qty + " units · closes by 3:15 pm at the latest</p>";
+  }
+  if (done) {
+    return head + "<div class='result'><div class='em'>" + (Number(done.net_pnl) >= 0 ? "✅" : "🔻") + "</div>" +
+      "<div><div class='tname' style='margin:0;font-size:16px'>" + esc(done.label) + "</div><div class='hint' style='margin:2px 0 0'>" + esc(done.exit_reason) +
+      " · " + hhmm(Date.parse(done.entry_time)) + " to " + hhmm(Date.parse(done.exit_time)) + "</div></div>" +
+      "<div class='rt'>" + pnlHtml(done.net_pnl, true) + "<div class='hint' style='margin:0'>after " + rs(done.charges) + " charges</div></div></div>" +
+      "<p class='hint'>One trade per plan per day. Done for today.</p>";
+  }
+  const sk = S.skips.find((s) => s.strategy === k && s.trade_date === today());
+  return head + "<div class='empty'><div class='em'>" + (S.running ? "👀" : "💤") + "</div><b>" +
+    (S.running ? "Watching for a good moment" : "Not running") + "</b><p>" + esc(S.pick.why) + "</p>" +
+    "<p class='hint'>New trades only between 9:30 am and 1:30 pm.</p>" +
+    (sk ? "<p class='skipnote'>At " + hhmm(Date.parse(sk.at)) + " it wanted " + aSide(sk.side) + " but skipped it: " + esc(filterNames(sk.failed)) + "</p>" : "") + "</div>";
+}
+
+function renderMood() {
+  const v = S.view;
+  if (!v) return "<div class='empty'><div class='em'>📊</div><b>Not reading yet</b><p>Starts after you press Start on a market day.</p></div>";
+  const m = moodOf(v), spot = S.lastNifty;
+  let out = "<div class='mood " + m.cls + "'>" + m.word + "</div>";
+  if (v.ready) {
+    out += "<div class='mrows'>" +
+      "<div><span>Futures traders</span><b>" + esc(MOOD[v.buildup] || "—") + "</b></div>" +
+      "<div><span>New puts sold (support)</span><b class='" + (v.dPE > v.dCE ? "up" : "") + "'>" + sgn(v.dPE) + "</b></div>" +
+      "<div><span>New calls sold (pressure)</span><b class='" + (v.dCE > v.dPE ? "down" : "") + "'>" + sgn(v.dCE) + "</b></div>" +
+      "<div><span>Put/Call ratio <small class='muted'>(above 1 = more support)</small></span><b>" + (v.pcr != null ? v.pcr.toFixed(2) : "—") + "</b></div></div>";
+  } else {
+    out += "<p class='hint'>Collecting data. The first reading comes 30 minutes after you press Start.</p>";
+  }
+  if (v.sup != null && v.res != null && spot != null && v.res > v.sup) {
+    const pct = clamp((spot - v.sup) / (v.res - v.sup) * 100);
+    out += "<div class='floorceil'><div class='fc-track'><div class='fc-dot' style='left:" + pct + "%'><span>Nifty " + Math.round(spot) + "</span></div></div>" +
+      "<div class='ends'><span>Floor " + v.sup + "<br><small>" + Math.round(spot - v.sup) + " pts below</small></span>" +
+      "<span style='text-align:right'>Ceiling " + v.res + "<br><small>" + Math.round(v.res - spot) + " pts above</small></span></div></div>";
+  }
+  return out + "<p class='hint'>Floor and ceiling are where big players sold the most puts and calls. Nifty often stops near them.</p>";
+}
+
+function render() {
+  // Top bar
+  const z = !!S.token;
+  $("pillZ").className = "pill " + (z ? "on" : "off");
+  $("stZ").textContent = z ? "Zerodha: " + (S.user || "logged in") : "Zerodha: not logged in";
+  const f = S.feed || "Off";
+  $("pillF").className = "pill " + (f === "Connected" ? "on" : f === "Connecting…" ? "wait" : "off");
+  $("stF").textContent = "Live prices: " + (f === "Connected" ? "on" : f === "Connecting…" ? "connecting" : "off");
+
+  // Market strip
+  $("stN").textContent = S.lastNifty != null ? S.lastNifty.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
+  const pc = prevClose();
+  if (S.lastNifty != null && pc) {
+    const d = S.lastNifty - pc, pp = d / pc * 100;
+    $("stChg").className = "chg " + (d >= 0 ? "up" : "down");
+    $("stChg").textContent = (d >= 0 ? "▲ +" : "▼ −") + Math.abs(d).toFixed(2) + " (" + (d >= 0 ? "+" : "−") + Math.abs(pp).toFixed(2) + "%) vs yesterday";
+  } else $("stChg").textContent = "";
+  $("stV").textContent = S.vix != null ? S.vix.toFixed(2) : "—";
+  $("stVh").textContent = S.vix == null ? "" : S.vix < 11 ? "Very calm: Nifty barely moving" : S.vix < 16 ? "Normal" : S.vix < 22 ? "Nervous: bigger moves" : "Very nervous: wild moves";
+  $("loginBtn").disabled = !cfg;
+  $("loginBtn").textContent = S.token ? "✓ Logged in" : "1. Log in to Zerodha";
+  $("startBtn").disabled = !cfg || !S.token || S.running;
+  $("startBtn").textContent = S.running ? "● Running" : "2. Start";
+
+  $("tradeBox").innerHTML = renderTrade();
+  $("moodBox").innerHTML = renderMood();
+
+  // Is it working?
+  const closed = closedTrades();
+  const ps = statsFor(closed.filter((t) => t.is_pick && KEYS.indexOf(t.strategy) >= 0));
+  let vc, vi, vh, vp;
+  if (ps.n < 50 || ps.days < 40) {
+    vc = "amber"; vi = "🧪"; vh = "Still testing. Don't use real money yet.";
+    vp = ps.n + " of 50 practice trades done, over " + ps.days + " of 40 market days. This takes about 2–3 months.";
+  } else if (ps.net <= 0) {
+    vc = "red"; vi = "⛔"; vh = "Not working. Don't use real money.";
+    vp = "After " + ps.n + " practice trades it has lost " + rs(-ps.net) + " after charges.";
+  } else if (ps.maxDD > CAPITAL * 0.5) {
+    vc = "red"; vi = "⚠️"; vh = "Making money, but too risky for ₹20,000.";
+    vp = "At its worst it fell " + rs(ps.maxDD) + ", more than half your money.";
+  } else {
+    vc = "green"; vi = "✅"; vh = "Working so far.";
+    vp = "Made " + rs(ps.net) + " after charges in " + ps.n + " practice trades. That's evidence, not a guarantee. Markets change.";
+  }
+  $("verdict").className = "verdict " + vc;
+  $("verdict").innerHTML = "<div class='vi'>" + vi + "</div><div><b>" + vh + "</b><p>" + esc(vp) + "</p>" +
+    (vc === "amber" ? "<div class='progress'><div style='width:" + clamp(Math.min(ps.n / 50, ps.days / 40) * 100) + "%'></div></div>" : "") + "</div>";
+  $("kpis").innerHTML =
+    "<div class='kpi'><span>Today's-plan trades</span><b>" + ps.n + "</b></div>" +
+    "<div class='kpi'><span>Won</span><b>" + ps.wins + (ps.n ? " <small class='muted'>(" + Math.round(ps.wins / ps.n * 100) + "%)</small>" : "") + "</b></div>" +
+    "<div class='kpi'><span>Total profit / loss</span><b>" + pnlHtml(ps.net) + "</b></div>" +
+    "<div class='kpi'><span>Biggest drop</span><b>" + (ps.maxDD ? "−" + rs(ps.maxDD) : "₹0") + "</b></div>";
+
+  // All 6 plans
+  $("plans").innerHTML = KEYS.map((k) => {
+    const p = S.positions[k], picked = S.pick && S.pick.k === k;
     const done = S.trades.find((t) => t.trade_date === today() && t.strategy === k && t.status !== "open");
-    const pickTag = S.pick && S.pick.k === k ? " <span class='tag'>PICK</span>" : "";
-    let posTxt = "Waiting for signal", en = "", nw = "", pl = "";
+    let st, pl = "<span class='muted'>—</span>";
     if (p) {
-      const now = S.optLtp[p.token];
-      posTxt = esc(p.label || p.symbol);
-      en = rs(p.entry_price);
-      nw = now != null ? rs(now) : "…";
-      if (now != null) { const g = r2((now - p.entry_price) * p.qty); pl = "<span class='" + cls(g) + "'>" + rs(g) + "</span>"; }
+      const now = posValue(p);
+      st = "<b style='color:var(--text)'>" + sideWord(p.side) + "</b> · " + esc(p.label);
+      if (now != null) pl = pnlHtml(r2((now - p.entry_price) * p.qty));
     } else if (done) {
-      posTxt = "Done for today";
-      pl = "<span class='" + cls(done.net_pnl) + "'>" + rs(done.net_pnl) + " net</span>";
+      st = "Done · " + esc(done.exit_reason || "");
+      if (done.net_pnl != null) pl = pnlHtml(done.net_pnl);
     } else {
-      const sk = isF(k) ? S.skips.find((s) => s.strategy === k && s.trade_date === today()) : null;
-      if (sk) posTxt = "Last " + esc(sk.side) + " signal (" + hhmm(Date.parse(sk.at)) + ") blocked: " + esc(String(sk.failed).split(",").map((f) => FILTERS[f] || f).join(", "));
-      else if (!S.running) posTxt = "Not running";
+      const sk = S.skips.find((s) => s.strategy === k && s.trade_date === today());
+      const rd = planReading(baseOf(k));
+      st = sk ? "Skipped at " + hhmm(Date.parse(sk.at)) + ": " + esc(filterNames(sk.failed))
+              : (S.running ? "Waiting" : "Not running") + (rd ? " · " + esc(rd) : "");
     }
-    return "<tr" + (isF(k) ? " class='f'" : "") + "><td>" + esc(nameOf(k)) + pickTag + "</td><td>" + esc(read[baseOf(k)]) +
-      "</td><td class='wrap'>" + posTxt + "</td><td>" + en + "</td><td>" + nw + "</td><td>" + pl + "</td></tr>";
+    return "<div class='plan" + (picked ? " picked" : "") + "'><div class='pn'><b>" + esc(BASES[baseOf(k)]) + "</b>" +
+      "<span class='chip " + (isSpread(k) ? "pair" : "single") + "'>" + (isSpread(k) ? "Safer pair" : "Single option") + "</span>" +
+      (picked ? "<span class='chip pick'>Today's plan</span>" : "") + "</div><div class='ps'>" + st + "</div><div class='pp'>" + pl + "</div></div>";
   }).join("");
 
   // Scorecard
-  const closed = closedTrades();
-  $("scoreBody").innerHTML = KEYS.map((k) => {
-    const s = statsFor(closed.filter((t) => t.strategy === k)), bt = isF(k) ? null : S.backtest[k];
-    const btTxt = bt ? (bt.pts >= 0 ? "+" : "") + bt.pts.toFixed(0) + " pts, " + bt.wins + "/" + bt.n + " wins" : (isF(k) ? "Live only" : "—");
-    return "<tr" + (isF(k) ? " class='f'" : "") + "><td>" + esc(nameOf(k)) + "</td><td>" + s.n + "</td><td>" + s.wins + "</td><td class='" + cls(s.net) + "'>" + rs(s.net) +
-      "</td><td>" + s.worst + "</td><td>" + (s.maxDD ? "−" + rs(s.maxDD) : "—") + "</td><td>" + btTxt + "</td></tr>";
-  }).join("");
-
-  const ps = statsFor(closed.filter((t) => t.is_pick));
-  const v = $("verdict");
-  if (ps.n < 50 || ps.days < 40) {
-    v.className = "banner amber";
-    v.textContent = "Not enough evidence yet: " + ps.n + " of 50 picked paper trades, over " + ps.days + " of 40 trading days. Net so far " + rs(ps.net) + ". Don't copy these trades with real money yet.";
-  } else if (ps.net <= 0) {
-    v.className = "banner red";
-    v.textContent = "Losing on paper after charges (" + rs(ps.net) + " over " + ps.n + " trades). Don't use this with real money.";
-  } else if (ps.maxDD > CAPITAL * 0.5) {
-    v.className = "banner red";
-    v.textContent = "In profit on paper (" + rs(ps.net) + "), but at its worst it fell " + rs(ps.maxDD) + ", more than half of " + rs(CAPITAL) + ". Too risky for this capital.";
-  } else {
-    v.className = "banner green";
-    v.textContent = "In profit on paper: " + rs(ps.net) + " after charges over " + ps.n + " trades, biggest fall " + rs(ps.maxDD) + ". That's evidence, not a guarantee. Markets change.";
+  const rows = KEYS.map((k) => {
+    const s = statsFor(closed.filter((t) => t.strategy === k)), bt = S.backtest[baseOf(k)];
+    const btTxt = baseOf(k) === "oi" ? "<span class='muted'>Can't check</span>" : bt ? (bt.pts >= 0 ? "+" : "") + bt.pts.toFixed(0) + " pts · won " + bt.wins + " of " + bt.n : "—";
+    return "<tr><td><b>" + esc(BASES[baseOf(k)]) + "</b> <span class='chip " + (isSpread(k) ? "pair" : "single") + "'>" + (isSpread(k) ? "Safer pair" : "Single") + "</span></td><td>" + s.n + "</td><td>" + s.wins +
+      "</td><td>" + (s.n ? pnlHtml(s.net) : "—") + "</td><td>" + (s.worst ? s.worst + " in a row" : "—") + "</td><td>" + (s.maxDD ? "−" + rs(s.maxDD) : "—") + "</td><td>" + btTxt + "</td></tr>";
+  });
+  const old = closed.filter((t) => KEYS.indexOf(t.strategy) < 0);
+  if (old.length) {
+    const s = statsFor(old);
+    rows.push("<tr><td class='muted'>Old rules (stopped)</td><td>" + s.n + "</td><td>" + s.wins + "</td><td>" + pnlHtml(s.net) +
+      "</td><td>" + (s.worst ? s.worst + " in a row" : "—") + "</td><td>" + (s.maxDD ? "−" + rs(s.maxDD) : "—") + "</td><td class='muted'>—</td></tr>");
   }
+  $("scoreBody").innerHTML = rows.join("");
 
-  // Filter blocks
+  // Why trades were skipped
   const counts = {};
-  for (const f of Object.keys(FILTERS)) counts[f] = 0;
-  for (const s of S.skips) for (const f of String(s.failed || "").split(",")) if (f in counts) counts[f]++;
-  $("blockBody").innerHTML = Object.keys(FILTERS).map((f) => "<tr><td>" + esc(FILTERS[f]) + "</td><td>" + counts[f] + "</td></tr>").join("");
-  $("skipBody").innerHTML = S.skips.slice(0, 15).map((s) =>
-    "<tr><td>" + esc(s.trade_date) + "</td><td>" + hhmm(Date.parse(s.at)) + "</td><td>" + esc(nameOf(s.strategy)) + "</td><td>" + esc(s.side) +
-    "</td><td class='wrap'>" + esc(String(s.failed || "").split(",").map((f) => FILTERS[f] || f).join(", ")) + "</td></tr>"
-  ).join("") || "<tr><td colspan='5' class='muted'>Nothing blocked yet.</td></tr>";
+  for (const fk of Object.keys(FILTERS)) counts[fk] = 0;
+  const curSkips = S.skips.filter((s) => KEYS.indexOf(s.strategy) >= 0);
+  for (const s of curSkips) for (const fk of String(s.failed || "").split(",")) if (fk in counts) counts[fk]++;
+  const mx = Math.max.apply(null, Object.values(counts).concat([0]));
+  $("blockBars").innerHTML = mx ? Object.keys(FILTERS).map((fk) =>
+    "<div class='bb'><span>" + esc(FILTERS[fk]) + "</span><div class='bbt'><div style='width:" + (counts[fk] / mx * 100) + "%'></div></div><b>" + counts[fk] + "</b></div>").join("")
+    : "<p class='hint' style='margin:0'>No trades skipped yet.</p>";
+  $("skipBody").innerHTML = curSkips.slice(0, 15).map((s) =>
+    "<tr><td>" + esc(s.trade_date) + "</td><td>" + hhmm(Date.parse(s.at)) + "</td><td>" + esc(nameOf(s.strategy)) + "</td><td>" + sideWord(s.side) +
+    "</td><td class='wrap'>" + esc(filterNames(s.failed)) + "</td></tr>"
+  ).join("") || "<tr><td colspan='5' class='muted'>Nothing skipped yet.</td></tr>";
 
-  // Log
-  $("logBody").innerHTML = S.trades.slice().reverse().slice(0, 150).map((t) => {
-    return "<tr><td>" + esc(t.trade_date) + "</td><td>" + esc(nameOf(t.strategy)) + (t.is_pick ? " <span class='tag'>PICK</span>" : "") +
+  // Trade history
+  $("logBody").innerHTML = S.trades.filter((t) => t.status !== "void").slice().reverse().slice(0, 150).map((t) => {
+    return "<tr><td>" + esc(t.trade_date) + "</td><td>" + esc(nameOf(t.strategy)) + (t.is_pick ? " <span class='chip pick'>Plan</span>" : "") +
       "</td><td>" + esc(t.label || t.symbol) + "</td><td>" + rs(t.entry_price) + " <span class='muted'>" + hhmm(Date.parse(t.entry_time)) + "</span></td><td>" +
-      (t.exit_price != null ? rs(t.exit_price) + " <span class='muted'>" + hhmm(Date.parse(t.exit_time)) + "</span>" : (t.status === "open" ? "Open" : "—")) +
+      (t.exit_price != null ? rs(t.exit_price) + " <span class='muted'>" + hhmm(Date.parse(t.exit_time)) + "</span>" : "<span class='muted'>Still open</span>") +
       "</td><td>" + esc(t.exit_reason || "") + "</td><td>" + (t.charges != null ? rs(t.charges) : "") +
-      "</td><td class='" + cls(Number(t.net_pnl)) + "'>" + (t.net_pnl != null ? rs(t.net_pnl) : "") + "</td></tr>";
-  }).join("") || "<tr><td colspan='8' class='muted'>No paper trades yet.</td></tr>";
+      "</td><td>" + (t.net_pnl != null ? pnlHtml(t.net_pnl) : "") + "</td></tr>";
+  }).join("") || "<tr><td colspan='8' class='muted'>No practice trades yet.</td></tr>";
 }
 
 // ---------- Start ----------
@@ -862,9 +1191,10 @@ async function start() {
     if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch (e) {} }
     msg("Loading Zerodha settings…");
     S.apiKey = (await api("config")).api_key;
-    msg("Loading the Nifty option list…");
+    msg("Loading the Nifty option and futures list…");
     S.options = await api("options", { access_token: S.token });
     if (!S.options.items || !S.options.items.length) throw new Error("No Nifty options found in Zerodha's list.");
+    if (!S.options.futs || !S.options.futs.length) log("No Nifty futures found; the OI flow strategy can't read futures buildup.");
     msg("Loading 60 days of Nifty prices and testing the strategies…");
     const now = Date.now();
     const h = await api("history", { access_token: S.token, from: kiteTime(now - 60 * 86400000).slice(0, 10) + " 09:00:00", to: kiteTime(now) });
@@ -877,9 +1207,9 @@ async function start() {
     msg("Loading your paper trades…");
     await reloadTrades();
     await reloadSkips();
-    // Trades left open on an earlier day (app was closed) are not counted.
+    // Trades left open on an earlier day, or from the earlier rules, are not counted.
     for (const t of S.trades) {
-      if (t.status === "open" && t.trade_date !== today()) {
+      if (t.status === "open" && (t.trade_date !== today() || KEYS.indexOf(t.strategy) < 0)) {
         const fields = { status: "void", exit_reason: "App was closed before exit, not counted" };
         try { await api("trade_close", { id: t.id, fields }); Object.assign(t, fields); } catch (e) {}
       }
@@ -887,20 +1217,27 @@ async function start() {
     S.positions = {};
     for (const t of S.trades) if (t.status === "open" && t.trade_date === today()) S.positions[t.strategy] = t;
 
-    const saved = store.get("np_pick2", null);
+    const saved = store.get("np_pick3", null);
     if (saved && saved.date === today()) S.pick = saved;
-    else { S.pick = Object.assign({ date: today() }, computePick()); store.set("np_pick2", S.pick); }
-    log("Today's pick: " + (S.pick.k ? nameOf(S.pick.k) : "none, skipping"));
+    else { S.pick = Object.assign({ date: today() }, computePick()); store.set("np_pick3", S.pick); }
+    log("Today's plan: " + (S.pick.k ? nameOf(S.pick.k) : "none, sitting out"));
 
     S.running = true;
     S.wsRetry = 0;
-    S.oiSnaps = [];
+    S.snaps = [];
     connectWS();
-    await takeOISnapshot();
+    await takeSnapshot();
     try { if ("wakeLock" in navigator) S.wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
-    msg(istParts().mins < 930
-      ? "Running. Keep this page open until 3:30 pm. The open-interest filter needs 15 minutes of running before it can pass."
-      : "Market is closed for today. Backtest and scorecard are loaded; live trading resumes next market day.");
+    if (istParts().mins < 930) {
+      msg("✓ Running. Keep this page open and the laptop awake until 3:30 pm. Market mood appears after 30 minutes.");
+      if (store.get("np_started", "") !== today()) {
+        store.set("np_started", today());
+        notify("🟢 Practice trader is running (pretend money)\nToday's plan: " + (S.pick.k ? nameOf(S.pick.k) : "none, sitting out today") + "\n" + S.pick.why +
+          "\n\nYou'll get a message when it buys or sells.");
+      }
+    } else {
+      msg("The market is closed now. Your results are loaded. Come back before 9:15 am on the next market day.");
+    }
   } catch (e) {
     msg("Couldn't start: " + e.message + (/token|session|api_key|access/i.test(e.message) ? ". Try logging in with Zerodha again." : ""));
   }
